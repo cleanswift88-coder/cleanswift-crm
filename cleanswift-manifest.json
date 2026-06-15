@@ -1,0 +1,32 @@
+{
+  "name": "CleanSwift CRM",
+  "short_name": "CleanSwift",
+  "description": "Gestion clients pour entreprise de nettoyage - Edmonton",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0057B8",
+  "theme_color": "#0057B8",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "fr-CA",
+  "shortcuts": [
+    {
+      "name": "Nouveau client",
+      "short_name": "Ajouter",
+      "description": "Ajouter un nouveau client",
+      "url": "/?action=new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Relances",
+      "short_name": "Relances",
+      "description": "Voir les relances du jour",
+      "url": "/?view=relances",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
