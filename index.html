@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#0057B8"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CleanSwift"/>
+<link rel="manifest" href="manifest.json"/>
+<title>CleanSwift CRM</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh;padding-bottom:80px}
+  :root{--blue:#0057B8;--blue-dark:#003d8a;--green:#2e7d32;--amber:#f57f17;--red:#c62828;--surface:#fff;--bg:#f0f4f8;--text:#1a1a2e;--sub:#6b7280}
+
+  /* HEADER */
+  .header{background:var(--blue);position:sticky;top:0;z-index:100}
+  .header-top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 0}
+  .logo{color:#fff;font-weight:900;font-size:20px;letter-spacing:-0.5px}
+  .logo span{opacity:0.7;font-size:11px;display:block;font-weight:400;margin-top:1px}
+  .btn-new{background:#fff;color:var(--blue);border:none;border-radius:10px;padding:9px 16px;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
+  .tabs{display:flex;padding:10px 16px 0;gap:6px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:8px 16px;border-radius:8px 8px 0 0;font-weight:700;font-size:13px;cursor:pointer;border:none;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.75);white-space:nowrap;transition:all .2s}
+  .tab.active{background:#fff;color:var(--blue)}
+
+  /* CONTENT */
+  .content{max-width:700px;margin:0 auto;padding:16px}
+
+  /* CARDS */
+  .card{background:var(--surface);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:12px}
+  .card-clickable{cursor:pointer;transition:box-shadow .2s,transform .1s}
+  .card-clickable:active{transform:scale(0.98)}
+  .card-clickable:hover{box-shadow:0 4px 16px rgba(0,87,184,.15)}
+
+  /* STATS GRID */
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .stat{background:var(--surface);border-radius:12px;padding:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07);border-top:3px solid var(--blue)}
+  .stat-val{font-size:26px;font-weight:900;color:var(--text)}
+  .stat-lbl{font-size:10px;color:var(--sub);font-weight:600;margin-top:2px;line-height:1.3}
+  .stat-icon{font-size:18px;margin-bottom:2px}
+
+  /* BADGES */
+  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .badge-actif{background:#e8f5e9;color:#2e7d32}
+  .badge-relance{background:#fff8e1;color:#f57f17}
+  .badge-inactif{background:#f5f5f5;color:#757575}
+  .badge-paye{background:#e8f5e9;color:#2e7d32}
+  .badge-attente{background:#e3f2fd;color:#1565c0}
+  .badge-retard{background:#ffebee;color:#c62828}
+
+  /* CLIENT CARD */
+  .client-card{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .client-name{font-weight:800;font-size:16px;color:var(--text);margin-bottom:2px}
+  .client-sub{font-size:12px;color:var(--sub);margin-bottom:4px}
+  .client-dates{font-size:11px;color:#aaa}
+  .client-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+
+  /* FORM */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+  .modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:20px 16px 40px}
+  .modal-handle{width:40px;height:4px;background:#e0e0e0;border-radius:99px;margin:0 auto 16px}
+  .modal-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:16px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-full{grid-column:1/-1}
+  label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px}
+  input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:14px;outline:none;background:#fafafa;color:var(--text);transition:border .2s}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);background:#fff}
+  textarea{min-height:60px;resize:vertical}
+  .btn{padding:12px 20px;border-radius:10px;border:none;font-weight:700;font-size:14px;cursor:pointer;width:100%;margin-top:8px}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-secondary{background:#f3f4f6;color:#374151}
+  .btn-danger{background:#ffebee;color:var(--red)}
+  .btn-row{display:flex;gap:8px;margin-top:12px}
+  .btn-row .btn{margin-top:0}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+
+  /* BOTTOM NAV */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0;cursor:pointer;border:none;background:none;color:#9ca3af;font-size:10px;font-weight:600;gap:2px;transition:color .2s}
+  .nav-item.active{color:var(--blue)}
+  .nav-item span:first-child{font-size:22px}
+
+  /* DETAIL */
+  .detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+  .detail-name{font-size:20px;font-weight:900;color:var(--text)}
+  .detail-addr{font-size:12px;color:var(--sub);margin-top:2px}
+  .close-btn{background:none;border:none;font-size:26px;color:#aaa;cursor:pointer;padding:0;line-height:1}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .info-cell{background:#f8f9fa;border-radius:10px;padding:10px 12px}
+  .info-cell-lbl{font-size:10px;color:#aaa;font-weight:700;margin-bottom:2px}
+  .info-cell-val{font-size:13px;color:var(--text);font-weight:700}
+  .note-box{background:#fffde7;border-radius:10px;padding:10px 14px;font-size:13px;color:#555;margin-bottom:12px}
+  .relance-box{background:#e8f0fe;border-radius:12px;padding:14px;margin-bottom:12px}
+  .relance-title{font-size:12px;font-weight:800;color:#1565c0;margin-bottom:8px}
+  .relance-msg{font-size:13px;color:#333;line-height:1.6;margin-bottom:10px}
+  .action-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .action-btn{padding:8px 4px;border-radius:8px;border:none;font-weight:700;font-size:12px;cursor:pointer;text-align:center;text-decoration:none;display:block}
+  .btn-copy{background:#e8f0fe;color:#1565c0}
+  .btn-sms{background:#25D366;color:#fff}
+  .btn-wa{background:#128C7E;color:#fff}
+  .history-item{display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:4px}
+  .history-item:nth-child(odd){background:#f8f9fa}
+
+  /* RELANCE VIEW */
+  .relance-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .relance-meta{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+  .retard-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#ffebee;color:var(--red)}
+
+  /* NOTIF BANNER */
+  .notif-banner{background:linear-gradient(135deg,#e8f0fe,#fff);border:1.5px solid #c5d8ff;border-radius:14px;padding:14px;margin-bottom:16px}
+  .notif-banner h4{font-size:14px;color:var(--blue);margin-bottom:6px}
+  .notif-banner p{font-size:12px;color:#555;margin-bottom:10px;line-height:1.5}
+  .btn-notif{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer}
+
+  /* SYNC STATUS */
+  .sync-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);margin-bottom:12px}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;flex-shrink:0}
+  .sync-dot.synced{background:#43a047}
+  .sync-dot.syncing{background:#ffa000;animation:pulse 1s infinite}
+  .sync-dot.error{background:var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* PROGRESS BAR */
+  .progress-bar{height:6px;background:#f0f4f8;border-radius:99px;margin-bottom:4px}
+  .progress-fill{height:100%;background:var(--blue);border-radius:99px;transition:width .5s}
+
+  /* SETTINGS */
+  .settings-section{margin-bottom:20px}
+  .settings-title{font-size:13px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+  .settings-item{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+  .settings-item-left{display:flex;align-items:center;gap:10px}
+  .settings-item-icon{font-size:18px}
+  .settings-item-label{font-size:14px;font-weight:600;color:var(--text)}
+  .settings-item-sub{font-size:11px;color:var(--sub)}
+  input[type=text].settings-input{border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;width:100%;margin-top:4px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">🧹 CleanSwift<span>CRM — Edmonton, AB</span></div>
+    <button class="btn-new" onclick="openModal('add')">+ Client</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard',this)">📊 Tableau</button>
+    <button class="tab" onclick="switchTab('clients',this)">👥 Clients</button>
+    <button class="tab" onclick="switchTab('relances',this)">📲 Relances</button>
+    <button class="tab" onclick="switchTab('settings',this)">⚙️ Config</button>
+  </div>
+</div>
+
+<div class="content" id="app-content"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal-sheet" id="modal-inner"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchTab('dashboard',null,'dashboard-nav')">
+    <span>📊</span><span>Tableau</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('clients',null,'clients-nav')">
+    <span>👥</span><span>Clients</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('relances',null,'relances-nav')">
+    <span>📲</span><span>Relances</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('settings',null,'settings-nav')">
+    <span>⚙️</span><span>Config</span>
+  </button>
+</nav>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+let state = {
+  currentTab: 'dashboard',
+  clients: [],
+  search: '',
+  filtreStatut: 'tous',
+  filtreService: 'tous',
+  sheetsUrl: '',
+  notifEnabled: false,
+  syncStatus: 'idle', // idle | syncing | synced | error
+  lastSync: null,
+};
+
+const SERVICE_LABELS = { weekly:'Hebdomadaire', biweekly:'Bihebdomadaire', monthly:'Mensuel', 'one-time':'Ponctuel' };
+const DEMO = [
+  { id:1, prenom:'Marie', nom:'Dupont', telephone:'780-555-0101', email:'marie.dupont@email.com',
+    adresse:'123 Whyte Ave, Edmonton', quartier:'Strathcona', typeService:'biweekly', prixService:120,
+    dateInscription:'2026-01-15', dernierService:'2026-06-01', prochainService:'2026-06-15',
+    statut:'actif', paiement:'payé', notes:'Préfère le mardi matin. Chien dans la maison.',
+    historique:[{date:'2026-06-01',montant:120,note:'Service complet'},{date:'2026-05-18',montant:120,note:'Service complet'}]},
+  { id:2, prenom:'Jean', nom:'Tremblay', telephone:'780-555-0202', email:'jean.tremblay@email.com',
+    adresse:'456 Jasper Ave, Edmonton', quartier:'Downtown', typeService:'monthly', prixService:180,
+    dateInscription:'2026-02-20', dernierService:'2026-05-10', prochainService:'2026-06-10',
+    statut:'relance', paiement:'en attente', notes:'Bureau 3 pièces.',
+    historique:[{date:'2026-05-10',montant:180,note:'Service mensuel'}]},
+  { id:3, prenom:'Sylvie', nom:'Martin', telephone:'780-555-0303', email:'sylvie.martin@email.com',
+    adresse:'789 Calgary Trail, Edmonton', quartier:'South Edmonton', typeService:'weekly', prixService:90,
+    dateInscription:'2026-03-01', dernierService:'2026-06-07', prochainService:'2026-06-14',
+    statut:'actif', paiement:'payé', notes:'Produits écologiques requis.',
+    historique:[{date:'2026-06-07',montant:90,note:'Service hebdo'},{date:'2026-05-31',montant:90,note:'Service hebdo'}]},
+  { id:4, prenom:'Isabelle', nom:'Roy', telephone:'780-555-0505', email:'i.roy@email.com',
+    adresse:'654 Millwoods Rd', quartier:'Millwoods', typeService:'biweekly', prixService:110,
+    dateInscription:'2026-04-10', dernierService:'2026-05-20', prochainService:'2026-06-03',
+    statut:'relance', paiement:'en retard', notes:'2 chats. Allergie aux parfums forts.',
+    historique:[{date:'2026-05-20',montant:110,note:'Service complet'}]},
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  if (state.clients.length === 0) state.clients = DEMO;
+  registerSW();
+  checkNotifPermission();
+  render();
+  scheduleLocalReminders();
+});
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('cleanswift-clients');
+    if (saved) state.clients = JSON.parse(saved);
+    state.sheetsUrl = localStorage.getItem('cleanswift-sheets-url') || 'https://script.google.com/macros/s/AKfycbxr3hXdXmQKgiWVgqVFEZvINmyCJ1Be4zJtp8t_NF7gyJgxwNGWKKYw2fHDi8Ha5Sz4gQ/exec';
+    state.notifEnabled = localStorage.getItem('cleanswift-notif') === 'true';
+    state.lastSync = localStorage.getItem('cleanswift-last-sync') || null;
+  } catch(e) {}
+}
+
+function saveToStorage() {
+  localStorage.setItem('cleanswift-clients', JSON.stringify(state.clients));
+  localStorage.setItem('cleanswift-sheets-url', state.sheetsUrl);
+  localStorage.setItem('cleanswift-notif', state.notifEnabled);
+  if (state.lastSync) localStorage.setItem('cleanswift-last-sync', state.lastSync);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SERVICE WORKER + PWA
+// ═══════════════════════════════════════════════════════════════════
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+}
+
+function checkNotifPermission() {
+  if ('Notification' in window) {
+    state.notifEnabled = Notification.permission === 'granted';
+  }
+}
+
+async function requestNotifications() {
+  if (!('Notification' in window)) { showToast('❌ Notifications non supportées'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    state.notifEnabled = true;
+    saveToStorage();
+    scheduleLocalReminders();
+    showToast('✅ Notifications activées !');
+    render();
+    // Test immédiat
+    setTimeout(() => {
+      new Notification('🧹 CleanSwift', { body: 'Notifications activées avec succès !', icon: '/icon-192.png' });
+    }, 500);
+  } else {
+    showToast('⚠️ Permission refusée');
+  }
+}
+
+// ── NOTIFICATIONS LOCALES (sans serveur push) ─────────────────────────────────
+// Utilise setTimeout pour simuler des alarmes pendant la session active
+// + stocke les relances dans localStorage pour le SW
+function scheduleLocalReminders() {
+  if (!state.notifEnabled) return;
+  const now = Date.now();
+  const reminders = [];
+
+  state.clients.forEach(c => {
+    if (!c.prochainService || c.typeService === 'one-time') return;
+    const serviceDate = new Date(c.prochainService);
+    const dayBefore = new Date(serviceDate); dayBefore.setDate(dayBefore.getDate() - 1);
+    dayBefore.setHours(8, 0, 0, 0); // Notifier à 8h la veille
+
+    const fireAt = dayBefore.getTime();
+    reminders.push({ id: c.id, clientName: `${c.prenom} ${c.nom}`, fireAt,
+      message: `Service prévu demain pour ${c.prenom} ${c.nom} (${SERVICE_LABELS[c.typeService]}) — ${c.adresse}` });
+
+    // setTimeout pour la session en cours
+    const delay = fireAt - now;
+    if (delay > 0 && delay < 86400000 * 3) { // Max 3 jours
+      setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification(`🧹 Rappel CleanSwift — ${c.prenom} ${c.nom}`, {
+            body: `Service de demain : ${SERVICE_LABELS[c.typeService]} — ${c.adresse}`,
+            icon: '/icon-192.png', tag: `cs-${c.id}`, requireInteraction: true,
+          });
+        }
+      }, delay);
+    }
+  });
+
+  // Stocker pour le Service Worker
+  if ('caches' in window) {
+    caches.open('cleanswift-v1').then(cache => {
+      cache.put('/reminders-data', new Response(JSON.stringify(reminders)));
+    }).catch(() => {});
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════════════════════════════════
+async function syncToSheets(action, client) {
+  if (!state.sheetsUrl) return;
+  state.syncStatus = 'syncing';
+  render();
+  try {
+    const res = await fetch(state.sheetsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action, client })
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Récupérer l'ID de l'événement calendrier retourné par le script
+      if (data.calendarEventId && client.id) {
+        const idx = state.clients.findIndex(c => c.id === client.id);
+        if (idx > -1) {
+          state.clients[idx].calendarEventId = data.calendarEventId;
+          saveToStorage();
+        }
+      }
+      state.syncStatus = 'synced';
+      state.lastSync = new Date().toLocaleTimeString('fr-CA');
+      if (data.calendarEventId) showToast('☁️ Sheet + 📅 Calendrier mis à jour !');
+      else showToast('☁️ Sync Google Sheets OK');
+    } else { throw new Error(data.error); }
+  } catch(e) {
+    state.syncStatus = 'error';
+    showToast('⚠️ Sync Sheets échouée — données sauvegardées localement');
+  }
+  saveToStorage();
+  setTimeout(() => { state.syncStatus = 'idle'; render(); }, 3000);
+}
+
+async function addToCalendar(clientId) {
+  if (!state.sheetsUrl) { showToast('⚙️ Configure l\'URL Apps Script d\'abord'); return; }
+  const c = state.clients.find(x => x.id === clientId);
+  if (!c) return;
+  showToast('📅 Création de l\'événement...');
+  try {
+    const res = await fetch(state.sheetsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'CALENDAR_CREATE', client: c })
+    });
+    const data = await res.json();
+    if (data.success && data.calendarEventId) {
+      const idx = state.clients.findIndex(x => x.id === clientId);
+      if (idx > -1) { state.clients[idx].calendarEventId = data.calendarEventId; saveToStorage(); }
+      showToast('✅ Événement créé dans Google Calendar !');
+      openDetail(clientId); // Rafraîchir la fiche
+    } else throw new Error(data.error);
+  } catch(e) {
+    showToast('⚠️ Erreur calendrier : ' + e.message);
+  }
+}
+
+async function syncAllToSheets() {
+  if (!state.sheetsUrl) { showToast('⚙️ Configure l\'URL Sheets d\'abord'); return; }
+  state.syncStatus = 'syncing';
+  render();
+  try {
+    const res = await fetch(state.sheetsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'SYNC_ALL', clients: state.clients })
+    });
+    const data = await res.json();
+    if (data.success) {
+      state.syncStatus = 'synced';
+      state.lastSync = new Date().toLocaleTimeString('fr-CA');
+      showToast(`☁️ ${state.clients.length} clients synchronisés !`);
+    } else throw new Error(data.error);
+  } catch(e) {
+    state.syncStatus = 'error';
+    showToast('⚠️ Sync échouée — vérifier l\'URL Apps Script');
+  }
+  saveToStorage();
+  setTimeout(() => { state.syncStatus = 'idle'; render(); }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CRUD
+// ═══════════════════════════════════════════════════════════════════
+function saveClient(form) {
+  const isNew = !form.id;
+  if (isNew) form.id = Date.now();
+  form.prixService = parseFloat(form.prixService) || 0;
+  if (!form.historique) form.historique = [];
+  if (isNew) {
+    state.clients.unshift(form);
+  } else {
+    const idx = state.clients.findIndex(c => c.id === form.id);
+    if (idx > -1) state.clients[idx] = form;
+  }
+  saveToStorage();
+  scheduleLocalReminders();
+  syncToSheets(isNew ? 'CREATE' : 'UPDATE', form);
+  closeModal();
+  render();
+  showToast(isNew ? '✅ Client créé et envoyé au Sheet' : '✅ Client mis à jour');
+}
+
+function deleteClient(id) {
+  const c = state.clients.find(x => x.id === id);
+  if (!confirm(`Supprimer ${c?.prenom} ${c?.nom} ?`)) return;
+  state.clients = state.clients.filter(x => x.id !== id);
+  saveToStorage();
+  syncToSheets('DELETE', { id });
+  closeModal();
+  render();
+  showToast('🗑️ Client supprimé');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════
+function joursDepuis(d) { return d ? Math.floor((Date.now() - new Date(d)) / 86400000) : 999; }
+function joursAvant(d)  { return d ? Math.ceil((new Date(d) - Date.now()) / 86400000) : 999; }
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('fr-CA', { day:'2-digit', month:'short', year:'numeric' });
+}
+function relanceMsg(c) {
+  return `Bonjour ${c.prenom} ! 😊 C'est l'équipe CleanSwift Edmonton. Votre prochain nettoyage ${SERVICE_LABELS[c.typeService]?.toLowerCase()} est bientôt prévu. Voulez-vous confirmer votre rendez-vous ? 📞 780-XXX-XXXX. Merci ! 🏠✨`;
+}
+function copyText(txt) {
+  navigator.clipboard?.writeText(txt).then(() => showToast('📋 Copié !'));
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function getMetrics() {
+  const actifs = state.clients.filter(c => c.statut === 'actif');
+  const relances = state.clients.filter(c => c.statut === 'relance');
+  const impayés = state.clients.filter(c => c.paiement === 'en retard');
+  const mrr = actifs.filter(c => c.typeService !== 'one-time').reduce((s,c) => s + Number(c.prixService||0), 0);
+  const aVenir7j = state.clients.filter(c => { const j = joursAvant(c.prochainService); return j>=0 && j<=7; });
+  const aRelancer = state.clients.filter(c => c.typeService !== 'one-time' && (c.statut==='relance' || joursAvant(c.prochainService) <= 0));
+  return { actifs:actifs.length, relances:relances.length, impayés:impayés.length, mrr, aVenir7j:aVenir7j.length, aRelancer:aRelancer.length, total:state.clients.length };
+}
+function filteredClients() {
+  return state.clients.filter(c => {
+    const q = state.search.toLowerCase();
+    const m = !q || `${c.prenom} ${c.nom} ${c.telephone} ${c.quartier}`.toLowerCase().includes(q);
+    const ms = state.filtreStatut==='tous' || c.statut===state.filtreStatut;
+    const msv = state.filtreService==='tous' || c.typeService===state.filtreService;
+    return m && ms && msv;
+  });
+}
+function syncDotHTML() {
+  const labels = { idle:'', syncing:'Sync...', synced:'Sync ✓', error:'Sync échouée' };
+  return `<div class="sync-status"><div class="sync-dot ${state.syncStatus}"></div>${labels[state.syncStatus]}${state.lastSync && state.syncStatus!=='syncing'?` — Dernière sync : ${state.lastSync}`:''}</div>`;
+}
+function badgeStatut(s) {
+  const map = { actif:'badge-actif', relance:'badge-relance', inactif:'badge-inactif' };
+  const lbl = { actif:'Actif', relance:'Relance', inactif:'Inactif' };
+  return `<span class="badge ${map[s]||''}">${lbl[s]||s}</span>`;
+}
+function badgePaiement(p) {
+  const map = { 'payé':'badge-paye','en attente':'badge-attente','en retard':'badge-retard' };
+  const lbl = { 'payé':'Payé','en attente':'En attente','en retard':'En retard' };
+  return `<span class="badge ${map[p]||''}">${lbl[p]||p}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════════
+function render() {
+  const el = document.getElementById('app-content');
+  const m = getMetrics();
+  if (state.currentTab === 'dashboard') el.innerHTML = renderDashboard(m);
+  else if (state.currentTab === 'clients') el.innerHTML = renderClients();
+  else if (state.currentTab === 'relances') el.innerHTML = renderRelances(m);
+  else if (state.currentTab === 'settings') el.innerHTML = renderSettings();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+function renderDashboard(m) {
+  const notifBanner = !state.notifEnabled ? `
+    <div class="notif-banner">
+      <h4>🔔 Activer les notifications</h4>
+      <p>Recevez une alerte automatique la veille de chaque service planifié — même quand l'app est fermée.</p>
+      <button class="btn-notif" onclick="requestNotifications()">Activer les rappels</button>
+    </div>` : '';
+  
+  const svcCounts = Object.entries(SERVICE_LABELS).map(([k,label]) => {
+    const count = state.clients.filter(c => c.typeService===k).length;
+    const pct = state.clients.length ? Math.round(count/state.clients.length*100) : 0;
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span style="font-weight:600">${label}</span><span style="color:#9ca3af">${count} client${count>1?'s':''} — ${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const alertes = [
+    ...state.clients.filter(c=>c.paiement==='en retard').map(c=>`<div style="font-size:13px;color:#555;margin-bottom:4px">💸 ${c.prenom} ${c.nom} — Paiement en retard ($${c.prixService})</div>`),
+    ...state.clients.filter(c=>c.statut==='relance').map(c=>`<div style="font-size:13px;color:#555;margin-bottom:4px">📲 ${c.prenom} ${c.nom} — Relance requise</div>`),
+  ].join('');
+
+  return `
+    ${syncDotHTML()}
+    ${notifBanner}
+    <div class="stats-grid">
+      <div class="stat" style="border-top-color:#43a047"><div class="stat-icon">✅</div><div class="stat-val">${m.actifs}</div><div class="stat-lbl">Clients actifs</div></div>
+      <div class="stat" style="border-top-color:#ffa000"><div class="stat-icon">🔔</div><div class="stat-val">${m.relances}</div><div class="stat-lbl">À relancer</div></div>
+      <div class="stat" style="border-top-color:#e53935"><div class="stat-icon">⚠️</div><div class="stat-val">${m.impayés}</div><div class="stat-lbl">Impayés</div></div>
+      <div class="stat" style="border-top-color:#7b1fa2"><div class="stat-icon">📅</div><div class="stat-val">${m.aVenir7j}</div><div class="stat-lbl">RDV cette semaine</div></div>
+      <div class="stat" style="border-top-color:#0057B8"><div class="stat-icon">👥</div><div class="stat-val">${m.total}</div><div class="stat-lbl">Total clients</div></div>
+      <div class="stat" style="border-top-color:#00897b"><div class="stat-icon">💰</div><div class="stat-val">$${m.mrr}</div><div class="stat-lbl">Revenu/cycle</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px"><div style="font-weight:800;font-size:15px;margin-bottom:12px;color:var(--text)">Fréquences de service</div>${svcCounts}</div>
+    ${alertes ? `<div class="card" style="background:#fff8e1;border:1.5px solid #ffe082"><div style="font-weight:800;font-size:13px;color:#f57f17;margin-bottom:8px">⚠️ Alertes</div>${alertes}</div>` : ''}
+  `;
+}
+
+// ── CLIENTS LIST ──────────────────────────────────────────────────
+function renderClients() {
+  const list = filteredClients();
+  return `
+    ${syncDotHTML()}
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      <input type="search" placeholder="🔍 Nom, tél, quartier..." value="${state.search}"
+        oninput="state.search=this.value;render()"
+        style="padding:10px 14px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:14px;outline:none"/>
+      <div style="display:flex;gap:8px">
+        <select onchange="state.filtreStatut=this.value;render()"
+          style="flex:1;padding:9px 10px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:13px;background:#fff;outline:none">
+          <option value="tous">Tous statuts</option>
+          <option value="actif" ${state.filtreStatut==='actif'?'selected':''}>Actif</option>
+          <option value="relance" ${state.filtreStatut==='relance'?'selected':''}>Relance</option>
+          <option value="inactif" ${state.filtreStatut==='inactif'?'selected':''}>Inactif</option>
+        </select>
+        <select onchange="state.filtreService=this.value;render()"
+          style="flex:1;padding:9px 10px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:13px;background:#fff;outline:none">
+          <option value="tous">Tous services</option>
+          ${Object.entries(SERVICE_LABELS).map(([k,v])=>`<option value="${k}" ${state.filtreService===k?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:10px">${list.length} client(s)</div>
+    ${list.map(c => `
+      <div class="card card-clickable" onclick="openDetail(${c.id})">
+        <div class="client-card">
+          <div>
+            <div class="client-name">${c.prenom} ${c.nom}</div>
+            <div class="client-sub">${c.quartier} • ${SERVICE_LABELS[c.typeService]||c.typeService} • $${c.prixService}/visite</div>
+            <div class="client-dates">Dernier : ${fmtDate(c.dernierService)} • Prochain : ${fmtDate(c.prochainService)}</div>
+          </div>
+          <div class="client-right">${badgeStatut(c.statut)}${badgePaiement(c.paiement)}</div>
+        </div>
+      </div>`).join('')}
+    ${list.length===0?`<div style="text-align:center;padding:40px;color:#aaa;font-size:15px">Aucun client trouvé.</div>`:''}
+  `;
+}
+
+// ── RELANCES ──────────────────────────────────────────────────────
+function renderRelances(m) {
+  const toRelance = state.clients.filter(c =>
+    c.typeService!=='one-time' && (c.statut==='relance' || joursAvant(c.prochainService) <= 1)
+  ).sort((a,b) => joursAvant(a.prochainService) - joursAvant(b.prochainService));
+
+  return `
+    <div class="card" style="background:#e8f0fe;border:none;margin-bottom:12px">
+      <div style="font-size:13px;color:#1565c0;font-weight:600">
+        📲 ${toRelance.length} client(s) à contacter — Envoyez directement par SMS ou WhatsApp.
+      </div>
+    </div>
+    ${toRelance.length===0?`<div style="text-align:center;padding:40px;color:#aaa">✅ Aucune relance nécessaire !</div>`:''}
+    ${toRelance.map(c => {
+      const j = joursAvant(c.prochainService);
+      const msg = relanceMsg(c);
+      let retardTxt = j===0?'Aujourd\'hui':j===1?'Demain':j<0?`${Math.abs(j)}j de retard`:`Dans ${j}j`;
+      return `
+        <div class="relance-card">
+          <div class="relance-meta">
+            <div>
+              <div style="font-weight:800;font-size:16px;color:var(--text)">${c.prenom} ${c.nom}</div>
+              <div style="font-size:12px;color:var(--sub);margin-top:2px">${c.quartier} • ${SERVICE_LABELS[c.typeService]} • $${c.prixService}</div>
+            </div>
+            <span class="retard-badge" style="${j>0?'background:#e8f5e9;color:#2e7d32':''}"> ${retardTxt}</span>
+          </div>
+          <div style="background:#f8f9fa;border-radius:10px;padding:10px;font-size:13px;color:#444;line-height:1.6;margin-bottom:10px">${msg}</div>
+          <div class="action-btns">
+            <button class="action-btn btn-copy" onclick="copyText(\`${msg.replace(/`/g,"'")}\`)">📋 Copier</button>
+            <a href="sms:${c.telephone}?body=${encodeURIComponent(msg)}" class="action-btn btn-sms">💬 SMS</a>
+            <a href="https://wa.me/${(c.telephone||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}" target="_blank" class="action-btn btn-wa">WhatsApp</a>
+          </div>
+          <div style="margin-top:8px;text-align:right">
+            <button onclick="openDetail(${c.id})" style="background:none;border:none;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer">Voir la fiche →</button>
+          </div>
+        </div>`;
+    }).join('')}
+  `;
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────
+function renderSettings() {
+  const notifState = state.notifEnabled ? '✅ Activées' : '❌ Désactivées';
+  const sheetState = state.sheetsUrl ? '✅ Configuré' : '⚙️ Non configuré';
+  return `
+    <div class="settings-section">
+      <div class="settings-title">☁️ Google Sheets</div>
+      <div class="card">
+        <label>URL du Web App (Apps Script)</label>
+        <input type="text" id="sheets-url-input" placeholder="https://script.google.com/macros/s/..." value="${state.sheetsUrl}"
+          style="margin-top:6px;padding:10px;border-radius:8px;border:1.5px solid #e5e7eb;font-size:13px;width:100%"/>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary" style="margin-top:0" onclick="
+            state.sheetsUrl=document.getElementById('sheets-url-input').value.trim();
+            saveToStorage();showToast('✅ URL enregistrée');render()">💾 Enregistrer</button>
+          <button class="btn btn-secondary" style="margin-top:0" onclick="syncAllToSheets()">🔄 Sync tout</button>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--sub);line-height:1.6">
+          État : <strong>${sheetState}</strong>${state.lastSync?` — Dernière sync : ${state.lastSync}`:''}<br/>
+          Chaque nouveau client est automatiquement envoyé au Google Sheet.
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">🔔 Notifications</div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">Rappels automatiques</div>
+        <div style="font-size:13px;color:var(--sub);margin-bottom:12px;line-height:1.5">
+          Recevez une notification la <strong>veille de chaque service</strong> planifié, même quand l'application est en arrière-plan.<br/><br/>
+          État : <strong>${notifState}</strong>
+        </div>
+        ${!state.notifEnabled
+          ? `<button class="btn btn-primary" onclick="requestNotifications()">🔔 Activer les notifications</button>`
+          : `<button class="btn btn-secondary" onclick="showToast('✅ Notifications déjà activées !')">✅ Notifications actives</button>`
+        }
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">📱 Installer l'application</div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">
+          <strong>Sur iPhone :</strong><br/>
+          Safari → Partager → "Ajouter à l'écran d'accueil" → Ajouter<br/><br/>
+          <strong>Sur Android :</strong><br/>
+          Chrome → ⋮ Menu → "Installer l'application" ou "Ajouter à l'écran d'accueil"
+        </div>
+        <div style="background:#e8f5e9;border-radius:10px;padding:10px 14px;font-size:12px;color:#2e7d32;font-weight:600">
+          ✅ L'app fonctionne hors ligne — vos données sont toujours disponibles.
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">📊 Statistiques</div>
+      <div class="card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+          <div><span style="color:var(--sub)">Total clients</span><br/><strong>${state.clients.length}</strong></div>
+          <div><span style="color:var(--sub)">Total facturé</span><br/><strong>$${state.clients.reduce((s,c)=>s+c.historique.reduce((ss,h)=>ss+h.montant,0),0)} CAD</strong></div>
+          <div><span style="color:var(--sub)">Services enregistrés</span><br/><strong>${state.clients.reduce((s,c)=>s+c.historique.length,0)}</strong></div>
+          <div><span style="color:var(--sub)">Revenu/cycle</span><br/><strong>$${state.clients.filter(c=>c.statut==='actif'&&c.typeService!=='one-time').reduce((s,c)=>s+Number(c.prixService||0),0)} CAD</strong></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODAL — ADD / EDIT
+// ═══════════════════════════════════════════════════════════════════
+function openModal(mode, clientId) {
+  const c = clientId ? state.clients.find(x => x.id===clientId) : null;
+  const today = new Date().toISOString().split('T')[0];
+  const f = c || { prenom:'',nom:'',telephone:'',email:'',adresse:'',quartier:'',
+    typeService:'biweekly',prixService:'',statut:'actif',paiement:'payé',
+    notes:'',dateInscription:today,dernierService:today,prochainService:'',historique:[] };
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-title">${c?'✏️ Modifier le client':'➕ Nouveau client'}</div>
+    <div class="form-grid">
+      <div><label>Prénom *</label><input id="f-prenom" value="${f.prenom}"/></div>
+      <div><label>Nom *</label><input id="f-nom" value="${f.nom}"/></div>
+      <div><label>Téléphone</label><input id="f-tel" type="tel" value="${f.telephone}"/></div>
+      <div><label>Email</label><input id="f-email" type="email" value="${f.email}"/></div>
+      <div class="form-full"><label>Adresse</label><input id="f-adresse" value="${f.adresse}"/></div>
+      <div><label>Quartier</label><input id="f-quartier" value="${f.quartier}"/></div>
+      <div><label>Type de service</label>
+        <select id="f-service">
+          ${Object.entries(SERVICE_LABELS).map(([k,v])=>`<option value="${k}"${f.typeService===k?' selected':''}>${v}</option>`).join('')}
+        </select></div>
+      <div><label>Prix ($CAD)</label><input id="f-prix" type="number" value="${f.prixService}"/></div>
+      <div><label>Statut</label>
+        <select id="f-statut">
+          <option value="actif"${f.statut==='actif'?' selected':''}>Actif</option>
+          <option value="relance"${f.statut==='relance'?' selected':''}>Relance</option>
+          <option value="inactif"${f.statut==='inactif'?' selected':''}>Inactif</option>
+        </select></div>
+      <div><label>Paiement</label>
+        <select id="f-paiement">
+          <option value="payé"${f.paiement==='payé'?' selected':''}>Payé</option>
+          <option value="en attente"${f.paiement==='en attente'?' selected':''}>En attente</option>
+          <option value="en retard"${f.paiement==='en retard'?' selected':''}>En retard</option>
+        </select></div>
+      <div><label>Dernier service</label><input id="f-dernier" type="date" value="${f.dernierService}"/></div>
+      <div><label>Prochain service</label><input id="f-prochain" type="date" value="${f.prochainService||''}"
+        onchange="updateCalendarPreview()"/></div>
+      <div><label>⏰ Heure du service</label><input id="f-heure" type="time" value="${f.heureService||'09:00'}"
+        onchange="updateCalendarPreview()"/></div>
+      <div style="display:flex;align-items:flex-end">
+        <div id="cal-preview" style="font-size:11px;color:#1565c0;background:#e8f0fe;border-radius:8px;padding:8px 10px;line-height:1.5;width:100%;margin-top:20px"></div>
+      </div>
+      <div class="form-full"><label>Notes</label><textarea id="f-notes">${f.notes}</textarea></div>
+    </div>
+    <div style="background:#e8f5e9;border-radius:10px;padding:10px 14px;font-size:12px;color:#2e7d32;margin-bottom:4px;line-height:1.5">
+      📅 <strong>Google Calendar :</strong> L'événement sera créé automatiquement dans ton calendrier lors de l'enregistrement.
+    </div>
+    <button class="btn btn-primary" onclick="submitForm(${c?c.id:0})">💾 Enregistrer + Créer dans Calendrier</button>
+    ${c?`<button class="btn btn-danger" onclick="deleteClient(${c.id})">🗑️ Supprimer ce client</button>`:''}
+    <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+  `;
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function submitForm(id) {
+  const existing = id ? state.clients.find(c => c.id===id) : null;
+  const form = {
+    id: id||0,
+    prenom: document.getElementById('f-prenom').value.trim(),
+    nom: document.getElementById('f-nom').value.trim(),
+    telephone: document.getElementById('f-tel').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    adresse: document.getElementById('f-adresse').value.trim(),
+    quartier: document.getElementById('f-quartier').value.trim(),
+    typeService: document.getElementById('f-service').value,
+    prixService: document.getElementById('f-prix').value,
+    statut: document.getElementById('f-statut').value,
+    paiement: document.getElementById('f-paiement').value,
+    dernierService: document.getElementById('f-dernier').value,
+    prochainService: document.getElementById('f-prochain').value,
+    heureService: document.getElementById('f-heure').value || '09:00',
+    notes: document.getElementById('f-notes').value.trim(),
+    dateInscription: existing?.dateInscription || new Date().toISOString().split('T')[0],
+    calendarEventId: existing?.calendarEventId || '',
+    historique: existing?.historique || [],
+  };
+  if (!form.prenom || !form.nom) { showToast('⚠️ Prénom et nom requis'); return; }
+  saveClient(form);
+}
+
+function updateCalendarPreview() {
+  const dateEl  = document.getElementById('f-prochain');
+  const heureEl = document.getElementById('f-heure');
+  const preview = document.getElementById('cal-preview');
+  if (!preview || !dateEl || !heureEl) return;
+  const date  = dateEl.value;
+  const heure = heureEl.value || '09:00';
+  if (!date) { preview.innerHTML = ''; return; }
+  const [hh, mm] = heure.split(':').map(Number);
+  const fin = `${String(hh+2).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  const dateLabel = new Date(date+'T12:00:00').toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long'});
+  preview.innerHTML = `📅 Événement Google Calendar : <strong>${dateLabel}</strong> de ${heure} à ${fin}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODAL — DETAIL
+// ═══════════════════════════════════════════════════════════════════
+function openDetail(id) {
+  const c = state.clients.find(x => x.id===id);
+  if (!c) return;
+  const msg = relanceMsg(c);
+  const total = c.historique.reduce((s,h) => s+h.montant, 0);
+  const jours = joursDepuis(c.dernierService);
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="detail-header">
+      <div>
+        <div class="detail-name">${c.prenom} ${c.nom}</div>
+        <div class="detail-addr">${c.quartier} • ${c.adresse}</div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${badgeStatut(c.statut)}${badgePaiement(c.paiement)}
+      <span class="badge" style="background:#e8f0fe;color:#1565c0">${SERVICE_LABELS[c.typeService]||c.typeService}</span>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-lbl">📞 Téléphone</div><div class="info-cell-val">${c.telephone||'—'}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">💰 Prix/visite</div><div class="info-cell-val">$${c.prixService} CAD</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">🧹 Dernier service</div><div class="info-cell-val">${fmtDate(c.dernierService)} (${jours}j)</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">📆 Prochain service</div><div class="info-cell-val">${fmtDate(c.prochainService)}${c.heureService?' à '+c.heureService:''}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">📧 Email</div><div class="info-cell-val" style="font-size:11px">${c.email||'—'}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">📅 Calendrier</div><div class="info-cell-val" style="font-size:11px">${c.calendarEventId?'✅ Événement créé':'⚪ Aucun événement'}</div></div>
+    </div>
+    ${c.notes?`<div class="note-box">📝 ${c.notes}</div>`:''}
+    ${c.prochainService ? `
+    <div style="background:#e8f5e9;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700;font-size:13px;color:#2e7d32">📅 Google Calendar</div>
+        <div style="font-size:12px;color:#555;margin-top:2px">${fmtDate(c.prochainService)}${c.heureService?' à '+c.heureService:''} — 2h de service</div>
+      </div>
+      <button onclick="addToCalendar(${c.id})" style="background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer">
+        ${c.calendarEventId?'🔄 Mettre à jour':'📅 Créer'}
+      </button>
+    </div>` : ''}    <div class="relance-box">
+      <div class="relance-title">📲 Message de relance</div>
+      <div class="relance-msg">${msg}</div>
+      <div class="action-btns">
+        <button class="action-btn btn-copy" onclick="copyText(\`${msg.replace(/`/g,"'")}\`)">📋 Copier</button>
+        <a href="sms:${c.telephone}?body=${encodeURIComponent(msg)}" class="action-btn btn-sms">💬 SMS</a>
+        <a href="https://wa.me/${(c.telephone||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}" target="_blank" class="action-btn btn-wa">WhatsApp</a>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-weight:800;font-size:14px;margin-bottom:8px;color:var(--text)">📜 Historique</div>
+      ${c.historique.length===0?`<div style="color:#aaa;font-size:13px">Aucun service enregistré.</div>`:''}
+      ${c.historique.map((h,i)=>`
+        <div class="history-item">
+          <span>${fmtDate(h.date)} — ${h.note}</span>
+          <span style="font-weight:700;color:#2e7d32">$${h.montant}</span>
+        </div>`).join('')}
+      ${c.historique.length>0?`<div style="text-align:right;font-weight:700;font-size:13px;margin-top:6px">Total : $${total} CAD</div>`:''}
+    </div>
+    <button class="btn btn-primary" onclick="closeModal();openModal('edit',${c.id})">✏️ Modifier</button>
+  `;
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════════════
+function switchTab(tab, tabEl, navId) {
+  state.currentTab = tab;
+  // Update tabs
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  // Update bottom nav
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (navId) document.getElementById(navId)?.classList.add('active');
+  render();
+  window.scrollTo(0,0);
+}
+
+// Donner des IDs aux boutons bottom nav
+document.addEventListener('DOMContentLoaded', () => {
+  const navBtns = document.querySelectorAll('.nav-item');
+  const ids = ['dashboard-nav','clients-nav','relances-nav','settings-nav'];
+  navBtns.forEach((b,i) => b.id = ids[i]);
+});
+</script>
+</body>
+</html>
