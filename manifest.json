@@ -1,0 +1,14 @@
+{
+  "name": "CleanSwift CRM",
+  "short_name": "CleanSwift",
+  "description": "Gestion clients pour entreprise de nettoyage - Edmonton",
+  "start_url": "https://cleanswift88-coder.github.io/cleanswift-crm/index.html",
+  "scope": "https://cleanswift88-coder.github.io/cleanswift-crm/",
+  "display": "standalone",
+  "background_color": "#0057B8",
+  "theme_color": "#0057B8",
+  "orientation": "portrait-primary",
+  "icons": [],
+  "categories": ["business", "productivity"],
+  "lang": "fr-CA"
+}
