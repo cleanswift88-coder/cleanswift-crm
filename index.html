@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CleanSwift CRM</title>
+<style>
+:root{--blue:#0078C8;--green:#00643C;--cyan:#7DDBD8;--bg:#F4FAFE;--dark:#1A2E2A;--red:#e74c3c;--orange:#e67e22;--purple:#8e44ad;--white:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+body{background:var(--bg);color:var(--dark);min-height:100vh;}
+.header{background:linear-gradient(135deg,var(--green),var(--blue));color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.2);}
+.logo{font-size:1.3rem;font-weight:800;}.logo span{color:var(--cyan);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.sync-indicator{font-size:0.7rem;opacity:0.8;}
+.btn-sm{padding:7px 14px;border-radius:20px;border:none;font-size:0.8rem;font-weight:600;cursor:pointer;background:var(--cyan);color:var(--dark);}
+.nav{display:flex;background:#fff;border-bottom:1px solid #e0e0e0;overflow-x:auto;position:sticky;top:56px;z-index:99;}
+.nav-btn{padding:12px 14px;border:none;background:none;font-size:0.78rem;font-weight:600;color:#888;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+.nav-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+.page{display:none;padding:14px;max-width:960px;margin:0 auto;}
+.page.active{display:block;}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+@media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+.stat-card{background:#fff;border-radius:14px;padding:13px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid var(--blue);}
+.stat-card.g{border-left-color:var(--green);}.stat-card.o{border-left-color:var(--orange);}.stat-card.r{border-left-color:var(--red);}.stat-card.p{border-left-color:var(--purple);}
+.stat-v{font-size:1.6rem;font-weight:800;}.stat-l{font-size:0.7rem;color:#888;margin-top:2px;}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:12px;}
+.card-title{font-size:0.9rem;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.fg{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;}
+.fg label{font-size:0.73rem;font-weight:600;color:#555;}
+.fg input,.fg select,.fg textarea{padding:9px 11px;border:2px solid #e0e0e0;border-radius:9px;font-size:0.86rem;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--blue);}
+.fg textarea{resize:vertical;min-height:60px;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.btn{padding:11px 18px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;}
+.btn-green{background:var(--green);color:#fff;width:100%;margin-top:6px;}
+.btn-blue{background:var(--blue);color:#fff;}
+.client-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:10px;border-left:4px solid var(--blue);cursor:pointer;}
+.client-name{font-size:0.95rem;font-weight:700;}
+.client-info{font-size:0.78rem;color:#666;line-height:1.7;margin-top:4px;}
+.client-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;}
+.tag{padding:3px 8px;border-radius:12px;font-size:0.68rem;font-weight:700;}
+.tag-freq{background:#e3f2fd;color:var(--blue);}.tag-type{background:#e8f5e9;color:var(--green);}.tag-alert{background:#fff3e0;color:var(--orange);}
+.job-card{background:#fff;border-radius:14px;padding:13px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:9px;border-left:4px solid #ddd;}
+.job-card.pending{border-left-color:var(--orange);}.job-card.confirmed{border-left-color:var(--blue);}.job-card.inprogress{border-left-color:var(--purple);}.job-card.done{border-left-color:var(--green);}.job-card.paid{border-left-color:#aaa;}
+.jh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
+.jclient{font-size:0.92rem;font-weight:700;}
+.badge{padding:3px 8px;border-radius:16px;font-size:0.68rem;font-weight:700;}
+.b-pending{background:#fff3e0;color:var(--orange);}.b-confirmed{background:#e3f2fd;color:var(--blue);}.b-inprogress{background:#f3e5f5;color:var(--purple);}.b-done{background:#e8f5e9;color:var(--green);}.b-paid{background:#f5f5f5;color:#888;}
+.jinfo{font-size:0.78rem;color:#666;line-height:1.7;}
+.jactions{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;}
+.btn-xs{padding:5px 9px;border-radius:7px;border:none;font-size:0.71rem;font-weight:600;cursor:pointer;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cal-nav button{padding:6px 12px;border:2px solid #e0e0e0;border-radius:8px;background:#fff;cursor:pointer;font-weight:600;font-size:0.8rem;margin:0 4px;}
+.cal-view-toggle{display:flex;gap:6px;margin-bottom:12px;}
+.cal-view-btn{padding:6px 14px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;font-size:0.78rem;font-weight:600;cursor:pointer;}
+.cal-view-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day-header{text-align:center;font-size:0.7rem;font-weight:700;color:#888;padding:6px 0;}
+.cal-day{min-height:60px;border-radius:8px;padding:4px;background:#fff;border:1px solid #f0f0f0;}
+.cal-day.today{background:#e3f2fd;border-color:var(--blue);}
+.cal-day.other-month{background:#f9f9f9;opacity:0.5;}
+.cal-date{font-size:0.72rem;font-weight:700;color:#555;margin-bottom:2px;}
+.cal-day.today .cal-date{color:var(--blue);}
+.cal-event{font-size:0.62rem;padding:2px 4px;border-radius:4px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;font-weight:600;}
+.ev-standard{background:#e3f2fd;color:var(--blue);}.ev-deep{background:#f3e5f5;color:var(--purple);}.ev-carpet{background:#e8f5e9;color:var(--green);}.ev-airbnb{background:#fff3e0;color:var(--orange);}.ev-other{background:#f5f5f5;color:#666;}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.week-day{border-radius:10px;padding:8px;background:#fff;border:2px solid #f0f0f0;min-height:80px;}
+.week-day.today{border-color:var(--blue);}
+.week-date{font-size:0.75rem;font-weight:700;text-align:center;margin-bottom:6px;}
+.reminder-card{background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,0.06);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.reminder-icon{font-size:1.4rem;flex-shrink:0;}
+.reminder-info{flex:1;}
+.reminder-title{font-size:0.85rem;font-weight:700;}
+.reminder-sub{font-size:0.74rem;color:#888;margin-top:2px;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:center;justify-content:center;padding:14px;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:18px;padding:18px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;}
+.modal-title{font-size:1rem;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:#888;}
+.notif{position:fixed;top:66px;right:14px;background:var(--green);color:#fff;padding:10px 16px;border-radius:10px;font-size:0.8rem;font-weight:600;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.2);animation:slideIn 0.3s ease;max-width:260px;}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.tab-bar{display:flex;gap:6px;margin-bottom:12px;border-bottom:2px solid #f0f0f0;padding-bottom:6px;overflow-x:auto;}
+.tab-btn{padding:6px 14px;border-radius:20px;border:none;background:none;font-size:0.78rem;font-weight:600;color:#888;cursor:pointer;white-space:nowrap;}
+.tab-btn.active{background:var(--blue);color:#fff;}
+.empty{text-align:center;padding:32px;color:#bbb;font-size:0.85rem;}
+.alert-row{background:#fff3e0;border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--orange);font-size:0.8rem;}
+.loading{text-align:center;padding:40px;color:#888;}
+.loading::after{content:'';display:inline-block;width:20px;height:20px;border:3px solid #e0e0e0;border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin-left:8px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.online-badge{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4CAF50;margin-right:4px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Clean<span>Swift</span> <span style="font-size:0.6rem;opacity:0.7;">CRM</span></div>
+  <div class="header-right">
+    <span class="sync-indicator" id="sync-status">⏳ Connecting...</span>
+    <button class="btn-sm" style="background:gold;color:var(--dark);margin-right:6px;" onclick="openReviews()">⭐ Reviews</button>
+    <button class="btn-sm" onclick="openModal('modal-add-job')">+ New Job</button>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="goTo('dashboard')">📊 Dashboard</button>
+  <button class="nav-btn" onclick="goTo('clients')">👤 Clients</button>
+  <button class="nav-btn" onclick="goTo('calendar')">📅 Calendar</button>
+  <button class="nav-btn" onclick="goTo('jobs')">📋 Jobs</button>
+  <button class="nav-btn" onclick="goTo('reminders')">🔔 Reminders</button>
+  <button class="nav-btn" onclick="goTo('team')">👥 Team</button>
+  <button class="nav-btn" onclick="goTo('payments')">💰 Pay</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="pg-dashboard">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-v" id="s-rev">$0</div><div class="stat-l">💰 Revenue</div></div>
+    <div class="stat-card g"><div class="stat-v" id="s-clients">0</div><div class="stat-l">👤 Clients</div></div>
+    <div class="stat-card o"><div class="stat-v" id="s-jobs">0</div><div class="stat-l">📋 Active Jobs</div></div>
+    <div class="stat-card r"><div class="stat-v" id="s-alerts">0</div><div class="stat-l">🔔 Alerts</div></div>
+  </div>
+  <div class="card"><div class="card-title">📅 Today's Schedule</div><div id="d-today"><div class="loading">Loading</div></div></div>
+  <div class="card"><div class="card-title">⚠️ Alerts</div><div id="d-alerts"><div class="loading">Loading</div></div></div>
+  <div class="card"><div class="card-title">🔄 Recurring Clients</div><div id="d-recurring"><div class="loading">Loading</div></div></div>
+</div>
+
+<!-- CLIENTS -->
+<div class="page" id="pg-clients">
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <input id="client-search" placeholder="🔍 Search..." style="flex:1;padding:9px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:0.85rem;" oninput="renderClients()">
+    <button class="btn btn-blue" onclick="openModal('modal-add-client')" style="padding:9px 14px;font-size:0.82rem;border-radius:10px;">+ Add</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="filterClients('all',this)">All</button>
+    <button class="tab-btn" onclick="filterClients('weekly',this)">Weekly</button>
+    <button class="tab-btn" onclick="filterClients('biweekly',this)">Bi-Weekly</button>
+    <button class="tab-btn" onclick="filterClients('monthly',this)">Monthly</button>
+    <button class="tab-btn" onclick="filterClients('onetime',this)">One-Time</button>
+  </div>
+  <div id="clients-list"><div class="loading">Loading</div></div>
+</div>
+
+<!-- CALENDAR -->
+<div class="page" id="pg-calendar">
+  <div class="cal-header">
+    <div class="cal-nav">
+      <button onclick="calPrev()">‹</button>
+      <span id="cal-title" style="font-weight:700;font-size:0.95rem;min-width:140px;text-align:center;"></span>
+      <button onclick="calNext()">›</button>
+    </div>
+    <button class="btn-sm" onclick="calToday()">Today</button>
+  </div>
+  <div class="cal-view-toggle">
+    <button class="cal-view-btn active" onclick="setCalView('month',this)">Month</button>
+    <button class="cal-view-btn" onclick="setCalView('week',this)">Week</button>
+  </div>
+  <div id="cal-container"><div class="loading">Loading</div></div>
+</div>
+
+<!-- JOBS -->
+<div class="page" id="pg-jobs">
+  <div style="display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;">
+    <button class="tab-btn active" onclick="filterJobs('all',this)">All</button>
+    <button class="tab-btn" onclick="filterJobs('pending',this)">Pending</button>
+    <button class="tab-btn" onclick="filterJobs('confirmed',this)">Confirmed</button>
+    <button class="tab-btn" onclick="filterJobs('done',this)">Done</button>
+    <button class="tab-btn" onclick="filterJobs('paid',this)">Paid</button>
+  </div>
+  <div id="jobs-list"><div class="loading">Loading</div></div>
+</div>
+
+<!-- REMINDERS -->
+<div class="page" id="pg-reminders">
+  <div class="card"><div class="card-title">🔔 Today & Tomorrow</div><div id="rem-today"><div class="loading">Loading</div></div></div>
+  <div class="card"><div class="card-title">📅 Next 7 Days</div><div id="rem-upcoming"><div class="loading">Loading</div></div></div>
+  <div class="card"><div class="card-title">🔄 Recurring Schedule</div><div id="rem-recurring"><div class="loading">Loading</div></div></div>
+</div>
+
+<!-- TEAM -->
+<div class="page" id="pg-team">
+  <div class="card">
+    <div class="card-title">➕ Add Employee</div>
+    <div class="fr"><div class="fg"><label>Name *</label><input id="e-name" placeholder="Marie Dupont"></div><div class="fg"><label>Phone</label><input id="e-phone" placeholder="+1 780..."></div></div>
+    <button class="btn btn-green" onclick="addEmployee()">➕ Create & Generate Link</button>
+  </div>
+  <div id="emp-list"><div class="loading">Loading</div></div>
+</div>
+
+<!-- PAYMENTS -->
+<div class="page" id="pg-payments">
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-card g"><div class="stat-v" id="p-earned">$0</div><div class="stat-l">💰 Revenue</div></div>
+    <div class="stat-card o"><div class="stat-v" id="p-topay">$0</div><div class="stat-l">👥 To Pay</div></div>
+    <div class="stat-card p"><div class="stat-v" id="p-profit">$0</div><div class="stat-l">📈 Profit</div></div>
+  </div>
+  <div class="card"><div class="card-title">⏳ Pending Payments</div><div id="pay-pending"><div class="loading">Loading</div></div></div>
+  <div class="card"><div class="card-title">✅ History</div><div id="pay-done"><div class="loading">Loading</div></div></div>
+</div>
+
+<!-- MODAL: Add Client -->
+<div class="modal-bg" id="modal-add-client">
+  <div class="modal">
+    <div class="modal-title">👤 New Client <button class="modal-close" onclick="closeModal('modal-add-client')">✕</button></div>
+    <div class="fr"><div class="fg"><label>Name *</label><input id="c-name" placeholder="Sarah Johnson"></div><div class="fg"><label>Phone *</label><input id="c-phone" placeholder="+1 780..."></div></div>
+    <div class="fg"><label>Email</label><input id="c-email" type="email" placeholder="sarah@email.com"></div>
+    <div class="fg"><label>Address *</label><input id="c-addr" placeholder="123 Main St, Edmonton"></div>
+    <div class="fr"><div class="fg"><label>Home Size</label><input id="c-size" placeholder="3bd/2ba"></div><div class="fg"><label>Service</label><select id="c-svc"><option>Standard</option><option>Deep</option><option>Move In/Out</option><option>Carpet</option><option>Airbnb</option><option>Commercial</option></select></div></div>
+    <div class="fr"><div class="fg"><label>Frequency</label><select id="c-freq"><option value="onetime">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Bi-Weekly</option><option value="monthly">Monthly</option></select></div><div class="fg"><label>Price ($)</label><input id="c-price" type="number" placeholder="225"></div></div>
+    <div class="fg"><label>Special Notes</label><textarea id="c-notes" placeholder="Has dog, side door code 1234, no bleach..."></textarea></div>
+    <button class="btn btn-green" onclick="addClient()">✅ Save Client</button>
+  </div>
+</div>
+
+<!-- MODAL: Add Job -->
+<div class="modal-bg" id="modal-add-job">
+  <div class="modal">
+    <div class="modal-title">📋 New Job <button class="modal-close" onclick="closeModal('modal-add-job')">✕</button></div>
+
+    <!-- CLIENT + SERVICE -->
+    <div class="fg"><label>Client *</label><select id="j-client" onchange="prefillFromClient()"><option value="">-- Select client --</option></select></div>
+    <div class="fr"><div class="fg"><label>Service</label><select id="j-svc"><option>Standard</option><option>Deep</option><option>Move In/Out</option><option>Carpet</option><option>Airbnb</option><option>Commercial</option><option>Garage</option></select></div><div class="fg"><label>Price ($)</label><input id="j-price" type="number" placeholder="225"></div></div>
+
+    <!-- DATE + HEURE — bien visible -->
+    <div style="background:#e3f2fd;border-radius:12px;padding:12px;margin-bottom:10px;border:2px solid var(--blue);">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--blue);margin-bottom:8px;">📅 Date & Time *</div>
+      <div class="fr">
+        <div class="fg"><label>Date *</label><input type="date" id="j-date" style="border-color:var(--blue);"></div>
+        <div class="fg"><label>Time</label><input type="time" id="j-time" value="09:00" style="border-color:var(--blue);"></div>
+      </div>
+    </div>
+
+    <!-- CLEANERS -->
+    <div class="fg"><label>👷 Cleaners (max 4)</label></div>
+    <div id="cleaners-fields">
+      <div class="fr" style="margin-bottom:6px;"><div class="fg"><label style="color:var(--blue);">Cleaner 1 *</label><select id="j-emp1"><option value="">-- Unassigned --</option></select></div><div class="fg"><label>Pay ($)</label><input id="j-pay1" type="number" placeholder="80"></div></div>
+      <div class="fr" style="margin-bottom:6px;"><div class="fg"><label>Cleaner 2</label><select id="j-emp2"><option value="">-- Optional --</option></select></div><div class="fg"><label>Pay ($)</label><input id="j-pay2" type="number" placeholder="80"></div></div>
+      <div class="fr" style="margin-bottom:6px;"><div class="fg"><label>Cleaner 3</label><select id="j-emp3"><option value="">-- Optional --</option></select></div><div class="fg"><label>Pay ($)</label><input id="j-pay3" type="number" placeholder="80"></div></div>
+      <div class="fr" style="margin-bottom:6px;"><div class="fg"><label>Cleaner 4</label><select id="j-emp4"><option value="">-- Optional --</option></select></div><div class="fg"><label>Pay ($)</label><input id="j-pay4" type="number" placeholder="80"></div></div>
+    </div>
+    <div class="fg"><label>Notes for employee</label><textarea id="j-notes" placeholder="Side door, dog in backyard..."></textarea></div>
+
+    <!-- ADD-ONS / TÂCHES SUPPLÉMENTAIRES -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--dark);margin-bottom:8px;">➕ Add-ons & Extra Tasks</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-oven" onchange="updateJobAddons()"> 🔥 Inside Oven +$35</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-fridge" onchange="updateJobAddons()"> ❄️ Inside Fridge +$30</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-cabinets" onchange="updateJobAddons()"> 🗄️ Cabinets +$40</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-basement" onchange="updateJobAddons()"> 🏠 Basement +$40</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-walls" onchange="updateJobAddons()"> 🧱 Wall Washing +$25</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-sheets" onchange="updateJobAddons()"> 🛏️ Change Sheets +$15/bed</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-fixtures" onchange="updateJobAddons()"> 💡 Light Fixtures +$20</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.76rem;background:#fff;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="j-ao-carpet" onchange="updateJobAddons()"> 🛋️ Carpet Cleaning +$85/rm</label>
+      </div>
+      <!-- Compteurs -->
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:7px 8px;border-radius:8px;margin-top:6px;border:1px solid #e0e0e0;">
+        <span style="font-size:0.76rem;">🪟 Windows (+$5/window)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" onclick="changeJobWin(-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">−</button>
+          <span id="j-win-count" style="font-weight:700;min-width:18px;text-align:center;">0</span>
+          <button type="button" onclick="changeJobWin(1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">+</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:7px 8px;border-radius:8px;margin-top:5px;border:1px solid #e0e0e0;">
+        <span style="font-size:0.76rem;">🛏️ Beds for sheet change (+$15/bed)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" onclick="changeJobBeds(-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">−</button>
+          <span id="j-beds-count" style="font-weight:700;min-width:18px;text-align:center;">0</span>
+          <button type="button" onclick="changeJobBeds(1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">+</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:7px 8px;border-radius:8px;margin-top:5px;border:1px solid #e0e0e0;">
+        <span style="font-size:0.76rem;">🛋️ Carpet rooms (+$85/room)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" onclick="changeJobCarpet(-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">−</button>
+          <span id="j-carpet-count" style="font-weight:700;min-width:18px;text-align:center;">0</span>
+          <button type="button" onclick="changeJobCarpet(1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">+</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:7px 8px;border-radius:8px;margin-top:5px;border:1px solid #e0e0e0;">
+        <span style="font-size:0.76rem;">🧺 Laundry loads (+$35/load)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" onclick="changeJobLaundry(-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">−</button>
+          <span id="j-laundry-count" style="font-weight:700;min-width:18px;text-align:center;">0</span>
+          <button type="button" onclick="changeJobLaundry(1)" style="width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;font-size:0.9rem;">+</button>
+        </div>
+      </div>
+      <!-- Total add-ons -->
+      <div style="margin-top:8px;padding:8px;background:#e8f5e9;border-radius:8px;font-size:0.82rem;font-weight:700;color:var(--green);display:flex;justify-content:space-between;">
+        <span>Add-ons total:</span><span id="j-addon-total">+$0</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-green" style="flex:1;" onclick="addJob()">✅ Save Job</button>
+      <button class="btn btn-blue" style="flex:1;border-radius:10px;" onclick="addJobAndCalendar()">📅 Save + Calendar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Client -->
+<div class="modal-bg" id="modal-edit-client">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit Client <button class="modal-close" onclick="closeModal('modal-edit-client')">✕</button></div>
+    <input type="hidden" id="ec-id">
+    <div class="fr"><div class="fg"><label>Name *</label><input id="ec-name"></div><div class="fg"><label>Phone *</label><input id="ec-phone" type="tel"></div></div>
+    <div class="fg"><label>Email</label><input id="ec-email" type="email"></div>
+    <div class="fg"><label>Address *</label><input id="ec-addr"></div>
+    <div class="fr"><div class="fg"><label>Home Size</label><input id="ec-size"></div><div class="fg"><label>Service</label><select id="ec-svc"><option>Standard</option><option>Deep</option><option>Move In/Out</option><option>Carpet</option><option>Airbnb</option><option>Commercial</option></select></div></div>
+    <div class="fr"><div class="fg"><label>Frequency</label><select id="ec-freq"><option value="onetime">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Bi-Weekly</option><option value="monthly">Monthly</option></select></div><div class="fg"><label>Price ($)</label><input id="ec-price" type="number"></div></div>
+    <div class="fg"><label>Notes</label><textarea id="ec-notes"></textarea></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-green" style="flex:1;" onclick="saveEditClient()">✅ Save Changes</button>
+      <button class="btn" style="flex:1;background:var(--red);color:#fff;border-radius:10px;" onclick="deleteClientConfirm()">🗑 Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Reviews Verification -->
+<div class="modal-bg" id="modal-reviews">
+  <div class="modal">
+    <div class="modal-title">⭐ Verify Reviews <button class="modal-close" onclick="closeModal('modal-reviews')">✕</button></div>
+    <div id="reviews-body"><div class="empty">No pending reviews</div></div>
+  </div>
+</div>
+<div class="modal-bg" id="modal-client-detail">
+  <div class="modal">
+    <div class="modal-title" id="cd-title">Client <button class="modal-close" onclick="closeModal('modal-client-detail')">✕</button></div>
+    <div id="cd-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: Job Detail -->
+<div class="modal-bg" id="modal-job-detail">
+  <div class="modal">
+    <div class="modal-title" id="jd-title">Job <button class="modal-close" onclick="closeModal('modal-job-detail')">✕</button></div>
+    <div id="jd-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Job -->
+<div class="modal-bg" id="modal-edit-job">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit Job <button class="modal-close" onclick="closeModal('modal-edit-job')">✕</button></div>
+    <input type="hidden" id="ej-id">
+
+    <div class="fr"><div class="fg"><label>Service</label><select id="ej-svc"><option>Standard</option><option>Deep</option><option>Move In/Out</option><option>Carpet</option><option>Airbnb</option><option>Commercial</option><option>Garage</option></select></div><div class="fg"><label>Price ($)</label><input id="ej-price" type="number"></div></div>
+
+    <div style="background:#e3f2fd;border-radius:12px;padding:12px;margin-bottom:10px;border:2px solid var(--blue);">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--blue);margin-bottom:8px;">📅 Date & Time</div>
+      <div class="fr">
+        <div class="fg"><label>Date *</label><input type="date" id="ej-date"></div>
+        <div class="fg"><label>Time</label><input type="time" id="ej-time"></div>
+      </div>
+    </div>
+
+    <!-- Add-ons -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--dark);margin-bottom:8px;">➕ Add-ons / Sub-services</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="addon-grid">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;background:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="ao-oven" value="35"> Inside Oven +$35</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;background:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="ao-fridge" value="30"> Inside Fridge +$30</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;background:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="ao-cabinets" value="40"> Cabinets +$40</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;background:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="ao-basement" value="40"> Basement +$40</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;background:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="ao-walls" value="25"> Wall Washing +$25</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;background:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid #e0e0e0;">
+          <input type="checkbox" id="ao-laundry" value="35"> Laundry +$35/load</label>
+      </div>
+      <!-- Windows counter -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:8px;border-radius:8px;margin-top:6px;border:1px solid #e0e0e0;">
+        <span style="font-size:0.78rem;">🪟 Windows (+$5/window)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" onclick="changeWin(-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;">−</button>
+          <span id="win-count" style="font-weight:700;min-width:20px;text-align:center;">0</span>
+          <button type="button" onclick="changeWin(1)" style="width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;">+</button>
+        </div>
+      </div>
+      <!-- Carpet rooms -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:8px;border-radius:8px;margin-top:6px;border:1px solid #e0e0e0;">
+        <span style="font-size:0.78rem;">🛋️ Carpet rooms (+$85/room)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" onclick="changeCarpet(-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;">−</button>
+          <span id="carpet-count" style="font-weight:700;min-width:20px;text-align:center;">0</span>
+          <button type="button" onclick="changeCarpet(1)" style="width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;">+</button>
+        </div>
+      </div>
+      <!-- Laundry loads -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:8px;border-radius:8px;margin-top:6px;border:1px solid #e0e0e0;">
+        <span style="font-size:0.78rem;">🧺 Laundry loads (+$35/load)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" onclick="changeLaundry(-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;">−</button>
+          <span id="laundry-count" style="font-weight:700;min-width:20px;text-align:center;">0</span>
+          <button type="button" onclick="changeLaundry(1)" style="width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-weight:700;">+</button>
+        </div>
+      </div>
+      <!-- Total add-ons -->
+      <div style="margin-top:8px;padding:8px;background:#e8f5e9;border-radius:8px;font-size:0.82rem;font-weight:700;color:var(--green);display:flex;justify-content:space-between;">
+        <span>Add-ons total:</span><span id="addon-total">+$0</span>
+      </div>
+    </div>
+
+    <!-- Cleaners -->
+    <div class="fg"><label>👷 Cleaners</label></div>
+    <div class="fr" style="margin-bottom:6px;"><div class="fg"><label style="color:var(--blue);">Cleaner 1</label><select id="ej-emp1"><option value="">-- Unassigned --</option></select></div><div class="fg"><label>Pay ($)</label><input id="ej-pay1" type="number"></div></div>
+    <div class="fr" style="margin-bottom:6px;"><div class="fg"><label>Cleaner 2</label><select id="ej-emp2"><option value="">-- Optional --</option></select></div><div class="fg"><label>Pay ($)</label><input id="ej-pay2" type="number"></div></div>
+    <div class="fr" style="margin-bottom:6px;"><div class="fg"><label>Cleaner 3</label><select id="ej-emp3"><option value="">-- Optional --</option></select></div><div class="fg"><label>Pay ($)</label><input id="ej-pay3" type="number"></div></div>
+    <div class="fr" style="margin-bottom:6px;"><div class="fg"><label>Cleaner 4</label><select id="ej-emp4"><option value="">-- Optional --</option></select></div><div class="fg"><label>Pay ($)</label><input id="ej-pay4" type="number"></div></div>
+
+    <div class="fg"><label>Notes for employee</label><textarea id="ej-notes" placeholder="Additional instructions..."></textarea></div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-green" style="flex:2;" onclick="saveEditJob()">✅ Save Changes</button>
+      <button class="btn" style="flex:1;background:var(--red);color:#fff;border-radius:10px;" onclick="delJob(document.getElementById('ej-id').value);closeModal('modal-edit-job')">🗑 Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, set, push, onValue, update, remove, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDHEh1d7ONcYGbC0xSFFKfOOig5xQzFbwE",
+  authDomain: "cleanswift-crm.firebaseapp.com",
+  databaseURL: "https://cleanswift-crm-default-rtdb.firebaseio.com",
+  projectId: "cleanswift-crm",
+  storageBucket: "cleanswift-crm.firebasestorage.app",
+  messagingSenderId: "585894532435",
+  appId: "1:585894532435:web:a77b0e665abb765c55bda6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ===== GLOBAL STATE =====
+window.clients = {};
+window.jobs = {};
+window.emps = {};
+window.calDate = new Date();
+window.calView = 'month';
+window.jobFilter = 'all';
+window.clientFilter = 'all';
+
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbzWdyU5WQq8oY1UA1wmw0TF4gUpvjRwPQ9Smm8EsoOUpOjff7EGPXwC8BK4OPFMqmaH/exec';
+const EMP_URL = location.origin + location.pathname.replace('index.html','') + 'employee.html';
+const GOOGLE_REVIEW = 'https://g.page/r/CYme-2qu1O2QEBM/review';
+
+// ===== UTILS =====
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function fmtDate(d){if(!d)return'';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});}
+function fmtDateLong(d){if(!d)return'';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+function today(){return new Date().toISOString().split('T')[0];}
+function addDays(d,n){const dt=new Date(d+'T12:00');dt.setDate(dt.getDate()+n);return dt.toISOString().split('T')[0];}
+function statusLabel(s){return{pending:'⏳ Pending',confirmed:'✅ Confirmed',inprogress:'🔵 In Progress',done:'✅ Done',paid:'💰 Paid'}[s]||s;}
+function freqLabel(f){return{weekly:'Weekly',biweekly:'Bi-Weekly',monthly:'Monthly',onetime:'One-Time'}[f]||f;}
+function freqDays(f){return{weekly:7,biweekly:14,monthly:28}[f]||0;}
+function svcColor(s){return{Standard:'ev-standard',Deep:'ev-deep','Move In/Out':'ev-deep',Carpet:'ev-carpet',Airbnb:'ev-airbnb'}[s]||'ev-other';}
+window.notify = function(msg,color){
+  const n=document.createElement('div');n.className='notif';
+  n.style.background=color||'var(--green)';n.textContent=msg;
+  document.body.appendChild(n);setTimeout(()=>n.remove(),3500);
+};
+window.openModal = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+
+// ===== FIREBASE LISTENERS =====
+function startListeners(){
+  // Clients
+  onValue(ref(db,'clients'), snap => {
+    window.clients = snap.val() || {};
+    populateClientSelect();
+    const page = document.querySelector('.page.active');
+    if(page?.id === 'pg-clients') renderClients();
+    if(page?.id === 'pg-dashboard') renderDashboard();
+    if(page?.id === 'pg-reminders') renderReminders();
+  });
+
+  // Jobs
+  onValue(ref(db,'jobs'), snap => {
+    const prev = {...window.jobs};
+    window.jobs = snap.val() || {};
+    populateClientSelect();
+    const page = document.querySelector('.page.active');
+    if(page?.id === 'pg-jobs') renderJobs(window.jobFilter);
+    if(page?.id === 'pg-dashboard') renderDashboard();
+    if(page?.id === 'pg-calendar') renderCalendar();
+    if(page?.id === 'pg-reminders') renderReminders();
+    if(page?.id === 'pg-payments') renderPayments();
+    // Check for new completions
+    Object.values(window.jobs).forEach(j => {
+      if(j.status === 'done' && (!prev[j.id] || prev[j.id].status !== 'done')){
+        notify('🎉 ' + j.empName + ' completed: ' + j.clientName + '!', 'var(--green)');
+      }
+    });
+    document.getElementById('sync-status').innerHTML='<span class="online-badge"></span>Live';
+  });
+
+  // Employees
+  onValue(ref(db,'employees'), snap => {
+    window.emps = snap.val() || {};
+    populateEmpSelect();
+    const page = document.querySelector('.page.active');
+    if(page?.id === 'pg-team') renderTeam();
+  });
+}
+
+// ===== NAVIGATION =====
+window.goTo = function(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+name).classList.add('active');
+  const idx={dashboard:0,clients:1,calendar:2,jobs:3,reminders:4,team:5,payments:6}[name];
+  if(idx!==undefined) document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+  const renders={dashboard:renderDashboard,clients:renderClients,calendar:renderCalendar,jobs:()=>renderJobs(window.jobFilter),reminders:renderReminders,team:renderTeam,payments:renderPayments};
+  if(renders[name]) renders[name]();
+};
+
+// ===== CLIENTS =====
+window.addClient = async function(){
+  const name=document.getElementById('c-name').value.trim();
+  const phone=document.getElementById('c-phone').value.trim();
+  if(!name||!phone){notify('Fill Name & Phone','var(--red)');return;}
+  const id=uid();
+  const client={id,name,phone,email:document.getElementById('c-email').value.trim(),address:document.getElementById('c-addr').value.trim(),size:document.getElementById('c-size').value.trim(),service:document.getElementById('c-svc').value,frequency:document.getElementById('c-freq').value,price:parseFloat(document.getElementById('c-price').value)||0,notes:document.getElementById('c-notes').value.trim(),createdAt:new Date().toISOString()};
+  await set(ref(db,'clients/'+id), client);
+  closeModal('modal-add-client');
+  ['c-name','c-phone','c-email','c-addr','c-size','c-price','c-notes'].forEach(i=>document.getElementById(i).value='');
+  notify('✅ Client added — '+name);
+};
+
+window.deleteClient = async function(id){
+  if(!confirm('Delete this client?'))return;
+  await remove(ref(db,'clients/'+id));
+  closeModal('modal-client-detail');
+  notify('🗑 Client deleted');
+};
+
+window.filterClients = function(f,btn){
+  window.clientFilter=f;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderClients();
+};
+
+function renderClients(){
+  const search=document.getElementById('client-search')?.value.toLowerCase()||'';
+  let list=Object.values(window.clients);
+  if(window.clientFilter!=='all') list=list.filter(c=>c.frequency===window.clientFilter);
+  if(search) list=list.filter(c=>(c.name||'').toLowerCase().includes(search)||(c.phone||'').includes(search)||(c.address||'').toLowerCase().includes(search));
+  list.sort((a,b)=>a.name.localeCompare(b.name));
+  const el=document.getElementById('clients-list');
+  if(!list.length){el.innerHTML='<div class="empty">No clients found</div>';return;}
+  const t=today();
+  el.innerHTML=list.map(c=>{
+    const cjobs=Object.values(window.jobs).filter(j=>j.clientId===c.id);
+    const lastJob=cjobs.filter(j=>j.status==='paid'||j.status==='done').sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const nextJob=cjobs.filter(j=>j.date>=t&&j.status!=='paid').sort((a,b)=>a.date.localeCompare(b.date))[0];
+    const daysSinceLast=lastJob?Math.floor((new Date()-new Date(lastJob.date+'T12:00'))/(1000*60*60*24)):null;
+    const needsFollowup=c.frequency!=='onetime'&&daysSinceLast&&freqDays(c.frequency)>0&&daysSinceLast>freqDays(c.frequency)+7;
+    return `<div class="client-card" onclick="viewClient('${c.id}')">
+      <div class="client-name">👤 ${c.name}</div>
+      <div class="client-info">
+        📍 ${c.address||'No address'} · 📞 ${c.phone}<br>
+        🧹 ${c.service||'Standard'} · 🏠 ${c.size||'TBD'} · 💰 $${c.price||0}<br>
+        ${lastJob?'🕒 Last: '+fmtDate(lastJob.date):'🆕 New client'}
+        ${nextJob?' · 📅 Next: '+fmtDate(nextJob.date):''}
+      </div>
+      <div class="client-tags">
+        <span class="tag tag-freq">${freqLabel(c.frequency)}</span>
+        <span class="tag tag-type">${c.service||'Standard'}</span>
+        ${needsFollowup?'<span class="tag tag-alert">⚠️ Follow up!</span>':''}
+        ${cjobs.length?`<span class="tag" style="background:#f3e5f5;color:var(--purple);">${cjobs.length} jobs</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.viewClient = function(id){
+  const c=window.clients[id];if(!c)return;
+  const cjobs=Object.values(window.jobs).filter(j=>j.clientId===id).sort((a,b)=>b.date.localeCompare(a.date));
+  const total=cjobs.filter(j=>j.status==='paid').reduce((s,j)=>s+j.price,0);
+  document.getElementById('cd-title').innerHTML=c.name+' <button class="modal-close" onclick="closeModal(\'modal-client-detail\')">✕</button>';
+  document.getElementById('cd-body').innerHTML=`
+    <div style="font-size:0.82rem;line-height:1.9;color:#555;margin-bottom:12px;">
+      📞 <a href="tel:${c.phone}" style="color:var(--blue);">${c.phone}</a><br>
+      ${c.email?'📧 <a href="mailto:'+c.email+'" style="color:var(--blue);">'+c.email+'</a><br>':''}
+      📍 ${c.address||'No address'}<br>
+      🧹 ${c.service} · 🏠 ${c.size||'TBD'} · 💰 $${c.price} · 🔄 ${freqLabel(c.frequency)}<br>
+      📊 $${total} total revenue
+      ${c.notes?'<br>📝 <b>'+c.notes+'</b>':''}
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="btn-xs" style="background:var(--blue);color:#fff;" onclick="closeModal('modal-client-detail');prefillJobFromClient('${c.id}');openModal('modal-add-job')">📋 New Job</button>
+      <button class="btn-xs" style="background:#25D366;color:#fff;" onclick="sendWhatsApp('${c.phone}','Hi ${c.name}! This is CleanSwift Edmonton 😊 Just checking in — would you like to book your next cleaning? We have availability this week! Reply anytime. 💚')">💬 WhatsApp</button>
+      <button class="btn-xs" style="background:#5856D6;color:#fff;" onclick="sendSMS('${c.phone}','Hi ${c.name}! CleanSwift Edmonton here. Time for your next cleaning! Reply or call +1 368 885 5157 to book.')">📱 SMS</button>
+      <button class="btn-xs" style="background:var(--orange);color:#fff;" onclick="openEditClient('${c.id}')">✏️ Edit</button>
+      <button class="btn-xs" style="background:var(--red);color:#fff;" onclick="deleteClient('${c.id}')">🗑 Delete</button>
+    </div>
+    <div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;">📋 Job History (${cjobs.length})</div>
+    ${cjobs.length?cjobs.map(j=>`
+      <div style="padding:8px;background:#f8f9fa;border-radius:8px;margin-bottom:6px;font-size:0.78rem;display:flex;justify-content:space-between;align-items:center;">
+        <div><b>${j.service}</b> · ${fmtDate(j.date)} · $${j.price}<br><span style="color:#888;">👷 ${j.empName}</span></div>
+        <span class="badge b-${j.status}">${statusLabel(j.status)}</span>
+      </div>
+    `).join(''):'<div class="empty" style="padding:16px;">No jobs yet</div>'}
+  `;
+  openModal('modal-client-detail');
+};
+
+window.prefillJobFromClient = function(clientId){
+  const c=window.clients[clientId];if(!c)return;
+  document.getElementById('j-client').value=clientId;
+  document.getElementById('j-svc').value=c.service||'Standard';
+  document.getElementById('j-price').value=c.price||'';
+};
+
+window.prefillFromClient = function(){
+  const id=document.getElementById('j-client').value;
+  if(id) prefillJobFromClient(id);
+};
+
+function populateClientSelect(){
+  const sel=document.getElementById('j-client');
+  if(!sel)return;
+  const cur=sel.value;
+  const list=Object.values(window.clients).sort((a,b)=>a.name.localeCompare(b.name));
+  sel.innerHTML='<option value="">-- Select client --</option>'+list.map(c=>`<option value="${c.id}">${c.name} — ${c.address||c.phone}</option>`).join('');
+  if(cur) sel.value=cur;
+}
+
+// ===== CHECKLIST =====
+function getChecklist(svc){
+  const L={
+    'Standard':['Pre-vacuum all rooms','Kitchen — countertops & sink','Kitchen — stovetop exterior','Kitchen — microwave exterior','Kitchen — cabinets exterior','Kitchen — floor swept & mopped','Bathroom(s) — toilet inside + outside','Bathroom(s) — sink & faucet','Bathroom(s) — shower/tub','Bathroom(s) — mirror','Bathroom(s) — floor mopped','Bedrooms — dust all surfaces','Bedrooms — vacuum/mop floor','Living room — dust & vacuum','All trash bins emptied','Shoe covers worn throughout'],
+    'Deep':['Pre-vacuum all rooms','Kitchen — inside oven','Kitchen — inside microwave','Kitchen — inside fridge','Kitchen — inside all cabinets','Kitchen — degrease stovetop','Kitchen — range hood','Kitchen — descale sink','Kitchen — wipe walls','Kitchen — mop floor','Bathroom(s) — drill-brush tiles & grout','Bathroom(s) — descale showerhead','Bathroom(s) — scrub toilet under rim','Bathroom(s) — wipe walls','Bathroom(s) — exhaust fan','Bedrooms — dust ceiling fans','Bedrooms — wipe baseboards','Living — clean window sills','Living — move furniture + clean under','Before & after photos taken'],
+    'Move In/Out':['BEFORE PHOTOS MANDATORY','Kitchen — inside all cabinets','Kitchen — inside oven','Kitchen — inside microwave','Kitchen — inside fridge','Kitchen — degrease stovetop','Kitchen — wipe walls','Bathroom(s) — drill-scrub tiles','Bathroom(s) — descale faucets','Bathroom(s) — scrub toilet','Bathroom(s) — inside medicine cabinet','Living/Beds — wipe all walls','Living/Beds — interior windows','Living/Beds — inside all closets','Vacuum carpet / mop all floors','Final sweep all rooms','AFTER PHOTOS MANDATORY'],
+    'Carpet':['Setup Mytee Lite 8070','Fill tank + 30ml Jet Stream','Heat 8 min (210°F)','Pre-vacuum with Henry PPR240','Pre-spray Pathfinder (5-10 min)','Bio-Enzymatic if pet odour (15 min)','Extract — slow passes 30cm/s','Final dry pass','Fibre Rinse last pass','Odor Out Lemon (10 min)','Vacuum Odor Out','Grooming rake','Furniture blocks','Before photos','After photos + sent to client','Machine cleaned'],
+    'Airbnb':['Start laundry IMMEDIATELY','Bathroom — scrub toilet','Bathroom — sink & faucet','Bathroom — shower/tub','Bathroom — mirror','Restock TP + towels + soap','Kitchen — wash dishes','Kitchen — wipe counters + stovetop','Kitchen — empty + reline trash','Bedrooms — strip + fresh linens','Bedrooms — dust + vacuum','Living room — dust + vacuum','Disinfect remote controls','Restock amenities','Condition photos to host'],
+    'Commercial':['Reception — dust + clean glass','Reception — empty trash','Reception — vacuum/mop','Washrooms — disinfect toilets','Washrooms — sinks + restock','Washrooms — mop','Break room — wipe + mop','Offices — dust + vacuum','All doors locked','Manager sign-off'],
+    'Garage':['PPE on (mask + gloves)','Remove all debris','Sweep/vacuum all floors','Vacuum walls + corners','Clean windows + shelves','Mop floors','Organize zones 1-6','Label all boxes','Zone map completed','Photos throughout']
+  };
+  return L[svc]||L['Standard'];
+}
+
+// ===== JOBS =====
+window.addJob = async function(skipCal){
+  const clientId=document.getElementById('j-client').value;
+  const date=document.getElementById('j-date').value;
+  const client=window.clients[clientId];
+  if(!clientId||!date){notify('Select Client & Date','var(--red)');return null;}
+  const svc=document.getElementById('j-svc').value;
+  const id=uid();
+  const empId=document.getElementById('j-emp1').value;
+
+  // Collect all 4 cleaners
+  const cleaners=[];
+  for(let i=1;i<=4;i++){
+    const eid=document.getElementById('j-emp'+i)?.value;
+    const epay=parseFloat(document.getElementById('j-pay'+i)?.value)||0;
+    if(eid&&eid!==''){
+      const e=window.emps[eid];
+      if(e) cleaners.push({id:eid,name:e.name,pay:epay});
+    }
+  }
+
+  // Fallback si aucun cleaner sélectionné
+  if(cleaners.length===0&&empId){
+    const e=window.emps[empId];
+    if(e) cleaners.push({id:empId,name:e.name,pay:0});
+  }
+
+  const totalPay=cleaners.reduce((s,c)=>s+c.pay,0);
+  const empNames=cleaners.map(c=>c.name).join(', ')||'Unassigned';
+  const firstEmpId=cleaners.length>0?cleaners[0].id:'';
+
+  const addons=getJobAddons();
+  const job={id,clientId,clientName:client?client.name:'Unknown',clientPhone:client?client.phone:'',clientAddr:client?client.address:'',service:svc,price:parseFloat(document.getElementById('j-price').value)||0,date,time:document.getElementById('j-time').value,empId:firstEmpId,empName:empNames,cleaners,pay:totalPay,notes:document.getElementById('j-notes').value.trim(),addons,windows:jWin,carpetRooms:jCarpet2,laundryLoads:jLaundry2,status:'confirmed',createdAt:new Date().toISOString(),checklist:[...getChecklist(svc),...addons],checklistDone:[]};
+  await set(ref(db,'jobs/'+id), job);
+  syncSheets(job);
+  notify('✅ Job saved — '+job.clientName);
+  closeModal('modal-add-job');
+  ['j-price','j-pay1','j-pay2','j-pay3','j-pay4','j-notes'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  resetJobAddons();;
+  return job;
+};
+
+window.addJobAndCalendar = async function(){
+  const job=await addJob(true);
+  if(job) downloadICS(job);
+};
+
+window.downloadICS = function(job){
+  const dt=new Date(job.date+'T'+(job.time||'09:00')+':00');
+  const end=new Date(dt.getTime()+3*60*60*1000);
+  const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//CleanSwift//CRM//EN\nBEGIN:VEVENT\nUID:${job.id}@cleanswifts.com\nDTSTAMP:${fmt(new Date())}\nDTSTART:${fmt(dt)}\nDTEND:${fmt(end)}\nSUMMARY:CleanSwift — ${job.service} — ${job.clientName}\nDESCRIPTION:Client: ${job.clientName}\\nPhone: ${job.clientPhone}\\nService: ${job.service}\\nPrice: $${job.price}\\nEmployee: ${job.empName}\\n${job.notes?'Notes: '+job.notes:''}\nLOCATION:${job.clientAddr}\nBEGIN:VALARM\nTRIGGER:-PT24H\nACTION:DISPLAY\nDESCRIPTION:Reminder: CleanSwift job tomorrow — ${job.clientName}\nEND:VALARM\nBEGIN:VALARM\nTRIGGER:-PT1H\nACTION:DISPLAY\nDESCRIPTION:CleanSwift job in 1 hour — ${job.clientName}\nEND:VALARM\nEND:VEVENT\nEND:VCALENDAR`;
+  const blob=new Blob([ics],{type:'text/calendar'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`cleanswift-${(job.clientName||'job').replace(/\s/g,'-')}.ics`;a.click();
+  URL.revokeObjectURL(url);
+  notify('📅 Calendar event downloaded!');
+};
+
+window.filterJobs = function(f,btn){
+  window.jobFilter=f;
+  document.querySelectorAll('#pg-jobs .tab-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderJobs(f);
+};
+
+function renderJobs(f){
+  let list=Object.values(window.jobs);
+  if(f&&f!=='all') list=list.filter(j=>j.status===f);
+  list.sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.getElementById('jobs-list');
+  if(!el)return;
+  if(!list.length){el.innerHTML='<div class="empty">No jobs found</div>';return;}
+  el.innerHTML=list.map(j=>`
+    <div class="job-card ${j.status}">
+      <div class="jh"><div class="jclient">👤 ${j.clientName}</div><div class="badge b-${j.status}">${statusLabel(j.status)}</div></div>
+      <div class="jinfo">
+        📍 ${j.clientAddr||'No address'}<br>
+        🧹 ${j.service} · 📅 ${fmtDate(j.date)} ${j.time?'at '+j.time:''}<br>
+        👷 ${j.cleaners&&j.cleaners.length>1?j.cleaners.map(c=>c.name).join(', '):j.empName} · 💰 $${j.price} · 👥 $${j.pay} total${j.cleaners&&j.cleaners.length>1?' ('+j.cleaners.length+' cleaners)':''}
+        ${j.notes?'<br>📝 '+j.notes:''}
+        ${j.checklist?'<br>📋 '+((j.checklistDone||[]).length)+'/'+j.checklist.length+' tasks':''}
+      </div>
+      <div class="jactions">
+        <button class="btn-xs" style="background:#e3f2fd;color:var(--blue);" onclick="viewJob('${j.id}')">👁 View</button>
+        <button class="btn-xs" style="background:#fff3e0;color:var(--orange);" onclick="openEditJob('${j.id}')">✏️ Edit</button>
+        <button class="btn-xs" style="background:#25D366;color:#fff;" onclick="sendReminderToClient('${j.id}')">💬 Remind</button>
+        <button class="btn-xs" style="background:#e8f0fe;color:#1a73e8;" onclick="downloadICS(window.jobs['${j.id}'])">📅 Cal</button>
+        ${j.status==='done'?`<button class="btn-xs" style="background:#e8f5e9;color:var(--green);" onclick="markPaid('${j.id}')">💰 Paid</button>`:''}
+        <button class="btn-xs" style="background:#ffebee;color:var(--red);" onclick="delJob('${j.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.viewJob = function(id){
+  const j=window.jobs[id];if(!j)return;
+  const done=j.checklistDone||[];const tot=j.checklist?j.checklist.length:0;const pct=tot?Math.round(done.length/tot*100):0;
+  const empLinks=j.cleaners&&j.cleaners.length>0
+    ?j.cleaners.map(c=>`<div style="margin-bottom:4px;"><b>${c.name}:</b> <a href="${EMP_URL}?id=${c.id}" target="_blank" style="color:var(--blue);font-size:0.75rem;word-break:break-all;">${EMP_URL}?id=${c.id}</a> <button class="btn-xs" style="background:var(--purple);color:#fff;margin-left:4px;" onclick="navigator.clipboard.writeText('${EMP_URL}?id=${c.id}').then(()=>notify('📋 Copied!'))">📋</button></div>`).join('')
+    :(j.empId?`<a href="${EMP_URL}?id=${j.empId}" style="color:var(--blue);font-size:0.75rem;">${EMP_URL}?id=${j.empId}</a>`:'');
+  const client=window.clients[j.clientId];
+  const days=client?freqDays(client.frequency):0;
+  const nextDate=days?addDays(j.date,days):null;
+  document.getElementById('jd-title').innerHTML=j.clientName+' — '+j.service+' <button class="modal-close" onclick="closeModal(\'modal-job-detail\')">✕</button>';
+  document.getElementById('jd-body').innerHTML=`
+    <div style="font-size:0.8rem;line-height:1.9;color:#555;">
+      <b>📍</b> ${j.clientAddr}<br><b>📅</b> ${fmtDateLong(j.date)} at ${j.time||'TBD'}<br>
+      <b>👷</b> ${j.cleaners&&j.cleaners.length>0?j.cleaners.map(c=>`${c.name} ($${c.pay})`).join(', '):j.empName} <br>
+      <b>💰</b> $${j.price} client · $${j.pay} total staff<br>
+      <b>📊</b> ${statusLabel(j.status)}
+      ${j.notes?'<br><b>📝</b> '+j.notes:''}
+    </div>
+    <div style="margin:10px 0;">
+      <b style="font-size:0.8rem;">Checklist: ${done.length}/${tot} (${pct}%)</b>
+      <div style="background:#eee;border-radius:6px;height:7px;margin:4px 0;"><div style="background:var(--green);height:7px;border-radius:6px;width:${pct}%;"></div></div>
+      <div style="font-size:0.74rem;color:#666;max-height:150px;overflow-y:auto;">${(j.checklist||[]).map(t=>`<div style="padding:2px 0;">${done.includes(t)?'✅':'⬜'} ${t}</div>`).join('')}</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+      <button class="btn-xs" style="background:var(--orange);color:#fff;padding:7px 12px;" onclick="openEditJob('${j.id}');closeModal('modal-job-detail')">✏️ Edit Job</button>
+      <button class="btn-xs" style="background:#25D366;color:#fff;padding:7px 12px;" onclick="sendReminderToClient('${j.id}')">💬 Remind Client</button>
+      <button class="btn-xs" style="background:var(--green);color:#fff;padding:7px 12px;" onclick="sendChecklistToClient('${j.id}')">📋 Send Checklist to Client</button>
+      <button class="btn-xs" style="background:#5856D6;color:#fff;padding:7px 12px;" onclick="sendReminderSMS('${j.id}')">📱 SMS</button>
+      <button class="btn-xs" style="background:var(--blue);color:#fff;padding:7px 12px;" onclick="downloadICS(window.jobs['${j.id}'])">📅 Calendar</button>
+      ${j.status==='done'?`<button class="btn-xs" style="background:var(--green);color:#fff;padding:7px 12px;" onclick="markPaid('${j.id}')">💰 Mark Paid</button>`:''}
+    </div>
+    ${nextDate&&client?.frequency!=='onetime'?`
+    <div style="margin-top:12px;padding:10px;background:#e8f5e9;border-radius:10px;font-size:0.78rem;">
+      <b>🔄 ${freqLabel(client.frequency)} client</b><br>
+      Next recommended: <b>${fmtDate(nextDate)}</b><br>
+      <button class="btn-xs" style="background:var(--green);color:#fff;margin-top:6px;padding:7px 12px;" onclick="createNextJob('${j.id}','${nextDate}')">📋 Create Next Job</button>
+    </div>`:''}
+  `;
+  openModal('modal-job-detail');
+};
+
+window.createNextJob = async function(jobId,nextDate){
+  const j=window.jobs[jobId];if(!j)return;
+  const id=uid();
+  const newJob={...j,id,date:nextDate,status:'confirmed',createdAt:new Date().toISOString(),checklistDone:[]};
+  await set(ref(db,'jobs/'+id), newJob);
+  closeModal('modal-job-detail');
+  notify('✅ Next job created for '+fmtDate(nextDate));
+};
+
+window.markPaid = async function(id){
+  await update(ref(db,'jobs/'+id),{status:'paid',paidAt:new Date().toISOString()});
+  closeModal('modal-job-detail');
+  notify('💰 Payment confirmed!');
+};
+
+window.delJob = async function(id){
+  if(!confirm('Delete this job?'))return;
+  await remove(ref(db,'jobs/'+id));
+  notify('🗑 Job deleted');
+};
+
+// ===== WHATSAPP =====
+window.sendWhatsApp = function(phone,msg){
+  const clean=phone.replace(/\D/g,'');
+  window.open('https://wa.me/'+clean+'?text='+encodeURIComponent(msg),'_blank');
+};
+
+window.sendReminderToClient = function(jobId){
+  const j=window.jobs[jobId];if(!j)return;
+  const msg=`Hi ${j.clientName}! 👋 This is CleanSwift Edmonton.\n\n📅 Reminder: Your ${j.service} is scheduled for ${fmtDateLong(j.date)} at ${j.time||'TBD'}.\n\n📍 ${j.clientAddr}\n\nIf you need to reschedule, please reply. See you soon! 💚\n— CleanSwift Team`;
+  sendWhatsApp(j.clientPhone,msg);
+};
+
+// ===== REMINDERS =====
+function renderReminders(){
+  const t=today();
+  const tomorrow=addDays(t,1);
+  const in7=addDays(t,7);
+  const todayJobs=Object.values(window.jobs).filter(j=>(j.date===t||j.date===tomorrow)&&j.status!=='paid'&&j.status!=='done');
+  const upcomingJobs=Object.values(window.jobs).filter(j=>j.date>tomorrow&&j.date<=in7&&j.status!=='paid');
+  const recurring=Object.values(window.clients).filter(c=>c.frequency!=='onetime');
+
+  document.getElementById('rem-today').innerHTML=todayJobs.length?todayJobs.map(j=>`
+    <div class="reminder-card">
+      <div class="reminder-icon">${j.date===t?'🔔':'📅'}</div>
+      <div class="reminder-info"><div class="reminder-title">${j.clientName} — ${j.service}</div><div class="reminder-sub">${j.date===t?'TODAY':'TOMORROW'} at ${j.time||'TBD'} · 👷 ${j.empName}</div></div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn-xs" style="background:#25D366;color:#fff;" onclick="sendReminderToClient('${j.id}')">💬 WA</button>
+        <button class="btn-xs" style="background:#5856D6;color:#fff;" onclick="sendReminderSMS('${j.id}')">📱 SMS</button>
+        <button class="btn-xs" style="background:#e3f2fd;color:var(--blue);" onclick="downloadICS(window.jobs['${j.id}'])">📅</button>
+      </div>
+    </div>
+  `).join(''):'<div class="empty">No jobs today or tomorrow 🎉</div>';
+
+  document.getElementById('rem-upcoming').innerHTML=upcomingJobs.length?upcomingJobs.map(j=>`
+    <div class="reminder-card">
+      <div class="reminder-icon">📋</div>
+      <div class="reminder-info"><div class="reminder-title">${j.clientName} — ${j.service}</div><div class="reminder-sub">${fmtDate(j.date)} at ${j.time||'TBD'} · 👷 ${j.empName}</div></div>
+      <button class="btn-xs" style="background:#25D366;color:#fff;" onclick="sendReminderToClient('${j.id}')">💬</button>
+    </div>
+  `).join(''):'<div class="empty">No upcoming jobs in 7 days</div>';
+
+  document.getElementById('rem-recurring').innerHTML=recurring.length?recurring.map(c=>{
+    const cjobs=Object.values(window.jobs).filter(j=>j.clientId===c.id&&(j.status==='paid'||j.status==='done')).sort((a,b)=>b.date.localeCompare(a.date));
+    const last=cjobs[0];
+    const days=freqDays(c.frequency);
+    const nextExpected=last?addDays(last.date,days):null;
+    const hasNext=Object.values(window.jobs).find(j=>j.clientId===c.id&&j.date>=t&&j.status!=='paid');
+    const isLate=nextExpected&&nextExpected<t&&!hasNext;
+    return `<div class="reminder-card" style="${isLate?'border-left:3px solid var(--orange);':''}">
+      <div class="reminder-icon">${isLate?'⚠️':'🔄'}</div>
+      <div class="reminder-info">
+        <div class="reminder-title">${c.name} <span style="color:#888;font-size:0.7rem;">(${freqLabel(c.frequency)})</span></div>
+        <div class="reminder-sub">${last?'Last: '+fmtDate(last.date):'No jobs yet'}${nextExpected?' · Next: '+fmtDate(nextExpected):''}${isLate?' · <b style="color:var(--orange);">OVERDUE!</b>':''}</div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn-xs" style="background:#25D366;color:#fff;" onclick="sendWhatsApp('${c.phone}','Hi ${c.name}! 👋 CleanSwift here — time for your ${freqLabel(c.frequency).toLowerCase()} clean! When works best? 😊')">💬</button>
+        <button class="btn-xs" style="background:var(--blue);color:#fff;" onclick="prefillJobFromClient('${c.id}');openModal('modal-add-job')">Book</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty">No recurring clients yet</div>';
+}
+
+// ===== CALENDAR =====
+function renderCalendar(){
+  document.getElementById('cal-title').textContent=window.calDate.toLocaleDateString('en-CA',{month:'long',year:'numeric'});
+  if(window.calView==='month') renderMonthCal();
+  else renderWeekCal();
+}
+
+function renderMonthCal(){
+  const year=window.calDate.getFullYear();const month=window.calDate.getMonth();
+  const first=new Date(year,month,1).getDay();
+  const days=new Date(year,month+1,0).getDate();
+  const t=today();
+  let html='<div class="cal-grid">';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>html+=`<div class="cal-day-header">${d}</div>`);
+  for(let i=0;i<first;i++) html+=`<div class="cal-day other-month"></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayJobs=Object.values(window.jobs).filter(j=>j.date===ds&&j.status!=='paid');
+    html+=`<div class="cal-day${ds===t?' today':''}">
+      <div class="cal-date">${d}</div>
+      ${dayJobs.slice(0,3).map(j=>`<div class="cal-event ${svcColor(j.service)}" onclick="viewJob('${j.id}')">${j.clientName.split(' ')[0]}</div>`).join('')}
+      ${dayJobs.length>3?`<div style="font-size:0.6rem;color:#888;">+${dayJobs.length-3}</div>`:''}
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('cal-container').innerHTML=html;
+}
+
+function renderWeekCal(){
+  const start=new Date(window.calDate);
+  start.setDate(start.getDate()-start.getDay());
+  const t=today();
+  let html='<div class="week-grid">';
+  for(let i=0;i<7;i++){
+    const d=new Date(start);d.setDate(d.getDate()+i);
+    const ds=d.toISOString().split('T')[0];
+    const dayJobs=Object.values(window.jobs).filter(j=>j.date===ds&&j.status!=='paid');
+    html+=`<div class="week-day${ds===t?' today':''}">
+      <div class="week-date">${d.toLocaleDateString('en-CA',{weekday:'short',day:'numeric'})}</div>
+      ${dayJobs.map(j=>`<div class="cal-event ${svcColor(j.service)}" onclick="viewJob('${j.id}')">${j.clientName.split(' ')[0]}<br><span style="font-size:0.58rem;">${j.time||''}</span></div>`).join('')}
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('cal-container').innerHTML=html;
+}
+
+window.setCalView = function(v,btn){
+  window.calView=v;
+  document.querySelectorAll('.cal-view-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCalendar();
+};
+window.calPrev = function(){if(window.calView==='month'){window.calDate.setMonth(window.calDate.getMonth()-1);}else{window.calDate.setDate(window.calDate.getDate()-7);}renderCalendar();};
+window.calNext = function(){if(window.calView==='month'){window.calDate.setMonth(window.calDate.getMonth()+1);}else{window.calDate.setDate(window.calDate.getDate()+7);}renderCalendar();};
+window.calToday = function(){window.calDate=new Date();renderCalendar();};
+
+// ===== DASHBOARD =====
+function renderDashboard(){
+  const t=today();
+  const jobsList=Object.values(window.jobs);
+  const clientsList=Object.values(window.clients);
+  const rev=jobsList.filter(j=>j.status==='paid').reduce((s,j)=>s+j.price,0);
+  const activeJobs=jobsList.filter(j=>j.status!=='paid'&&j.status!=='done').length;
+  const alerts=getAlerts();
+  document.getElementById('s-rev').textContent='$'+rev;
+  document.getElementById('s-clients').textContent=clientsList.length;
+  document.getElementById('s-jobs').textContent=activeJobs;
+  document.getElementById('s-alerts').textContent=alerts.length;
+
+  const todayJobs=jobsList.filter(j=>j.date===t&&j.status!=='paid');
+  document.getElementById('d-today').innerHTML=todayJobs.length?todayJobs.map(j=>`
+    <div style="padding:9px;border-left:3px solid var(--blue);margin-bottom:7px;background:#f8f9fa;border-radius:0 8px 8px 0;">
+      <b>${j.clientName}</b> — ${j.service}<br>
+      <span style="font-size:0.76rem;color:#666;">⏰ ${j.time||'TBD'} · 👷 ${j.empName} · 📍 ${j.clientAddr}</span>
+      <div style="margin-top:5px;display:flex;gap:5px;">
+        <button class="btn-xs" style="background:#25D366;color:#fff;" onclick="sendReminderToClient('${j.id}')">💬 Remind</button>
+        <button class="btn-xs" style="background:#e3f2fd;color:var(--blue);" onclick="downloadICS(window.jobs['${j.id}'])">📅 Cal</button>
+        <button class="btn-xs" style="background:#e3f2fd;color:var(--blue);" onclick="viewJob('${j.id}')">👁 View</button>
+      </div>
+    </div>
+  `).join(''):'<div class="empty">No jobs today 🎉</div>';
+
+  document.getElementById('d-alerts').innerHTML=alerts.length?alerts.map(a=>`<div class="alert-row">${a.icon} <b>${a.title}</b><br><span style="color:#888;">${a.sub}</span></div>`).join(''):'<div class="empty">No alerts 👍</div>';
+
+  const recurring=clientsList.filter(c=>c.frequency!=='onetime').slice(0,5);
+  document.getElementById('d-recurring').innerHTML=recurring.length?recurring.map(c=>{
+    const last=jobsList.filter(j=>j.clientId===c.id&&(j.status==='paid'||j.status==='done')).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const days=freqDays(c.frequency);
+    const next=last&&days?addDays(last.date,days):'TBD';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:0.8rem;">
+      <div><b>${c.name}</b> <span style="color:#888;">(${freqLabel(c.frequency)})</span><br><span style="color:#888;">Next: ${next!=='TBD'?fmtDate(next):next}</span></div>
+      <button class="btn-xs" style="background:var(--blue);color:#fff;" onclick="prefillJobFromClient('${c.id}');openModal('modal-add-job')">Book</button>
+    </div>`;
+  }).join(''):'<div class="empty">No recurring clients</div>';
+}
+
+function getAlerts(){
+  const t=today();const alerts=[];
+  Object.values(window.clients).filter(c=>c.frequency!=='onetime').forEach(c=>{
+    const days=freqDays(c.frequency);if(!days)return;
+    const hasNext=Object.values(window.jobs).find(j=>j.clientId===c.id&&j.date>=t&&j.status!=='paid');
+    if(hasNext)return;
+    const last=Object.values(window.jobs).filter(j=>j.clientId===c.id&&(j.status==='paid'||j.status==='done')).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    if(last){const ds=Math.floor((new Date()-new Date(last.date+'T12:00'))/(1000*60*60*24));if(ds>days+3)alerts.push({icon:'⚠️',title:c.name+' — '+freqLabel(c.frequency),sub:'Last seen '+ds+' days ago — follow up needed!'});}
+  });
+  Object.values(window.jobs).filter(j=>j.date===addDays(t,1)&&j.status!=='paid').forEach(j=>{alerts.push({icon:'📅',title:'Tomorrow: '+j.clientName,sub:j.service+' at '+(j.time||'TBD')+' · '+j.empName});});
+  return alerts;
+}
+
+// ===== TEAM =====
+window.addEmployee = async function(){
+  const name=document.getElementById('e-name').value.trim();
+  if(!name){notify('Enter name','var(--red)');return;}
+  const id=uid();
+  const emp={id,name,phone:document.getElementById('e-phone').value.trim(),createdAt:new Date().toISOString()};
+  await set(ref(db,'employees/'+id), emp);
+  document.getElementById('e-name').value='';document.getElementById('e-phone').value='';
+  notify('✅ '+name+' added');
+};
+
+window.delEmp = async function(id){
+  if(!confirm('Delete employee?'))return;
+  await remove(ref(db,'employees/'+id));
+};
+
+function renderTeam(){
+  const el=document.getElementById('emp-list');
+  const list=Object.values(window.emps);
+  if(!list.length){el.innerHTML='<div class="empty">No employees yet</div>';return;}
+  el.innerHTML=list.map(emp=>{
+    const link=EMP_URL+'?id='+emp.id;
+    const empJobs=Object.values(window.jobs).filter(j=>{
+      if(j.cleaners&&j.cleaners.length>0) return j.cleaners.some(c=>c.id===emp.id);
+      return j.empId===emp.id;
+    });
+    return `<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;flex-shrink:0;">${emp.name[0].toUpperCase()}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;">${emp.name}</div>
+        <div style="font-size:0.73rem;color:#888;">📋 ${empJobs.length} jobs · ✅ ${empJobs.filter(j=>j.status==='done'||j.status==='paid').length} done</div>
+        <div style="font-size:0.7rem;color:var(--blue);word-break:break-all;">${link}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <button class="btn-xs" style="background:#e3f2fd;color:var(--blue);" onclick="navigator.clipboard.writeText('${link}').then(()=>notify('📋 Copied!'))">📋 Copy</button>
+        <button class="btn-xs" style="background:#ffebee;color:var(--red);" onclick="delEmp('${emp.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function populateEmpSelect(){
+  const list=Object.values(window.emps).sort((a,b)=>a.name.localeCompare(b.name));
+  const opts='<option value="">-- Optional --</option>'+list.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  const opts1='<option value="">-- Unassigned --</option>'+list.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  const sel1=document.getElementById('j-emp1');if(sel1){const c=sel1.value;sel1.innerHTML=opts1;if(c)sel1.value=c;}
+  ['j-emp2','j-emp3','j-emp4'].forEach(id=>{const sel=document.getElementById(id);if(sel){const c=sel.value;sel.innerHTML=opts;if(c)sel.value=c;}});
+}
+
+// ===== PAYMENTS =====
+function renderPayments(){
+  const jobsList=Object.values(window.jobs);
+  const paid=jobsList.filter(j=>j.status==='paid');
+  const pending=jobsList.filter(j=>j.status==='done'&&j.pay>0);
+  const totalEarned=paid.reduce((s,j)=>s+j.price,0);
+  const totalPaid=paid.reduce((s,j)=>s+j.pay,0);
+  const topay=pending.reduce((s,j)=>s+j.pay,0);
+  document.getElementById('p-earned').textContent='$'+totalEarned;
+  document.getElementById('p-topay').textContent='$'+topay;
+  document.getElementById('p-profit').textContent='$'+(totalEarned-totalPaid);
+  document.getElementById('pay-pending').innerHTML=pending.length?pending.map(j=>{
+    const cleanerRows=j.cleaners&&j.cleaners.length>0?j.cleaners.map(c=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:11px;background:#fff3e0;border-radius:10px;margin-bottom:7px;">
+        <div><div style="font-weight:700;">👷 ${c.name}</div><div style="font-size:0.76rem;color:#666;">${j.clientName} · ${fmtDate(j.date)}</div></div>
+        <div style="text-align:right;"><div style="font-size:1.1rem;font-weight:800;color:var(--orange);">$${c.pay}</div></div>
+      </div>
+    `).join(''):`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:11px;background:#fff3e0;border-radius:10px;margin-bottom:7px;">
+        <div><div style="font-weight:700;">👷 ${j.empName}</div><div style="font-size:0.76rem;color:#666;">${j.clientName} · ${fmtDate(j.date)}</div></div>
+        <div style="text-align:right;"><div style="font-size:1.1rem;font-weight:800;color:var(--orange);">$${j.pay}</div></div>
+      </div>
+    `;
+    return `<div style="border:1px solid #f0f0f0;border-radius:12px;padding:10px;margin-bottom:10px;">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--dark);margin-bottom:8px;">📋 ${j.clientName} · ${fmtDate(j.date)} · Total: $${j.pay}</div>
+      ${cleanerRows}
+      <button class="btn-xs" style="width:100%;background:var(--green);color:#fff;padding:8px;" onclick="markPaid('${j.id}')">✓ Mark All Paid — $${j.pay}</button>
+    </div>`;
+  }).join(''):'<div class="empty">No pending payments 🎉</div>';
+  document.getElementById('pay-done').innerHTML=paid.slice(0,20).map(j=>`
+    <div style="display:flex;justify-content:space-between;padding:8px;background:#f5f5f5;border-radius:8px;margin-bottom:5px;font-size:0.78rem;">
+      <div><b>${j.empName}</b> — ${j.clientName}<br><span style="color:#888;">${fmtDate(j.date)}</span></div>
+      <div style="font-weight:700;color:#888;">$${j.pay} ✓</div>
+    </div>
+  `).join('')||'<div class="empty">No history</div>';
+}
+
+// ===== EDIT JOB =====
+let ejWindows=0,ejCarpet=0,ejLaundry=0;
+
+window.changeWin=function(n){ejWindows=Math.max(0,ejWindows+n);document.getElementById('win-count').textContent=ejWindows;updateAddonTotal();}
+window.changeCarpet=function(n){ejCarpet=Math.max(0,ejCarpet+n);document.getElementById('carpet-count').textContent=ejCarpet;updateAddonTotal();}
+window.changeLaundry=function(n){ejLaundry=Math.max(0,ejLaundry+n);document.getElementById('laundry-count').textContent=ejLaundry;updateAddonTotal();}
+
+function updateAddonTotal(){
+  let total=0;
+  ['oven','fridge','cabinets','basement','walls','laundry'].forEach(id=>{
+    const cb=document.getElementById('ao-'+id);
+    if(cb&&cb.checked) total+=parseInt(cb.value)||0;
+  });
+  total+=ejWindows*5+ejCarpet*85+ejLaundry*35;
+  document.getElementById('addon-total').textContent='+$'+total;
+  // Update price
+  const priceEl=document.getElementById('ej-price');
+  const basePrice=parseFloat(priceEl.dataset.base||priceEl.value)||0;
+  if(priceEl.dataset.base) priceEl.value=basePrice+total;
+}
+
+window.openEditJob = function(id){
+  const j=window.jobs[id];if(!j)return;
+  document.getElementById('ej-id').value=id;
+  document.getElementById('ej-svc').value=j.service||'Standard';
+  const priceEl=document.getElementById('ej-price');
+  priceEl.value=j.price||0;
+  priceEl.dataset.base=j.basePrice||j.price||0;
+  document.getElementById('ej-date').value=j.date||'';
+  document.getElementById('ej-time').value=j.time||'09:00';
+  document.getElementById('ej-notes').value=j.notes||'';
+
+  // Reset add-ons
+  ['oven','fridge','cabinets','basement','walls','laundry'].forEach(id=>{
+    const cb=document.getElementById('ao-'+id);
+    if(cb){
+      cb.checked=(j.addons||[]).includes(id);
+      cb.onchange=updateAddonTotal;
+    }
+  });
+  ejWindows=j.windows||0;ejCarpet=j.carpetRooms||0;ejLaundry=j.laundryLoads||0;
+  document.getElementById('win-count').textContent=ejWindows;
+  document.getElementById('carpet-count').textContent=ejCarpet;
+  document.getElementById('laundry-count').textContent=ejLaundry;
+  updateAddonTotal();
+
+  // Cleaners
+  const empList=Object.values(window.emps);
+  const opts='<option value="">-- Optional --</option>'+empList.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  const opts1='<option value="">-- Unassigned --</option>'+empList.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  document.getElementById('ej-emp1').innerHTML=opts1;
+  ['ej-emp2','ej-emp3','ej-emp4'].forEach(sid=>{document.getElementById(sid).innerHTML=opts;});
+  (j.cleaners||[]).forEach((c,i)=>{
+    const sel=document.getElementById('ej-emp'+(i+1));
+    const pay=document.getElementById('ej-pay'+(i+1));
+    if(sel)sel.value=c.id||'';
+    if(pay)pay.value=c.pay||0;
+  });
+
+  openModal('modal-edit-job');
+};
+
+window.saveEditJob = async function(){
+  const id=document.getElementById('ej-id').value;if(!id)return;
+  const svc=document.getElementById('ej-svc').value;
+
+  // Collect add-ons
+  const addons=[];
+  ['oven','fridge','cabinets','basement','walls','laundry'].forEach(aid=>{
+    const cb=document.getElementById('ao-'+aid);
+    if(cb&&cb.checked)addons.push(aid);
+  });
+
+  // Collect cleaners
+  const cleaners=[];
+  for(let i=1;i<=4;i++){
+    const eid=document.getElementById('ej-emp'+i)?.value;
+    const epay=parseFloat(document.getElementById('ej-pay'+i)?.value)||0;
+    if(eid){const e=window.emps[eid];if(e)cleaners.push({id:eid,name:e.name,pay:epay});}
+  }
+  const totalPay=cleaners.reduce((s,c)=>s+c.pay,0);
+
+  const updates={
+    service:svc,
+    price:parseFloat(document.getElementById('ej-price').value)||0,
+    basePrice:parseFloat(document.getElementById('ej-price').dataset.base||0),
+    date:document.getElementById('ej-date').value,
+    time:document.getElementById('ej-time').value,
+    notes:document.getElementById('ej-notes').value.trim(),
+    addons,windows:ejWindows,carpetRooms:ejCarpet,laundryLoads:ejLaundry,
+    cleaners,pay:totalPay,
+    empId:cleaners.length>0?cleaners[0].id:'',
+    empName:cleaners.map(c=>c.name).join(', ')||'Unassigned',
+    checklist:getChecklist(svc),
+    updatedAt:new Date().toISOString()
+  };
+
+  await update(ref(db,'jobs/'+id),updates);
+  closeModal('modal-edit-job');
+  notify('✅ Job updated!');
+};
+
+// ===== ADD-ONS FORMULAIRE ADD JOB =====
+let jWin=0,jBeds=0,jCarpet2=0,jLaundry2=0;
+
+window.changeJobWin=function(n){jWin=Math.max(0,jWin+n);document.getElementById('j-win-count').textContent=jWin;updateJobAddons();}
+window.changeJobBeds=function(n){jBeds=Math.max(0,jBeds+n);document.getElementById('j-beds-count').textContent=jBeds;updateJobAddons();}
+window.changeJobCarpet=function(n){jCarpet2=Math.max(0,jCarpet2+n);document.getElementById('j-carpet-count').textContent=jCarpet2;updateJobAddons();}
+window.changeJobLaundry=function(n){jLaundry2=Math.max(0,jLaundry2+n);document.getElementById('j-laundry-count').textContent=jLaundry2;updateJobAddons();}
+
+window.updateJobAddons=function(){
+  let total=0;
+  const checks={oven:35,fridge:30,cabinets:40,basement:40,walls:25,fixtures:20};
+  Object.entries(checks).forEach(([id,price])=>{
+    const cb=document.getElementById('j-ao-'+id);
+    if(cb&&cb.checked)total+=price;
+  });
+  if(document.getElementById('j-ao-sheets')?.checked)total+=jBeds*15;
+  if(document.getElementById('j-ao-carpet')?.checked)total+=jCarpet2*85;
+  total+=jWin*5+jLaundry2*35;
+  const el=document.getElementById('j-addon-total');
+  if(el)el.textContent='+$'+total;
+}
+
+function getJobAddons(){
+  const addons=[];
+  const addonTasks={
+    oven:'🔥 Inside oven — racks, walls, door',
+    fridge:'❄️ Inside fridge — all shelves + drawers',
+    cabinets:'🗄️ Inside all kitchen cabinets',
+    basement:'🏠 Basement — full clean',
+    walls:'🧱 Wall washing — all rooms',
+    fixtures:'💡 Light fixtures — all rooms cleaned',
+  };
+  Object.entries(addonTasks).forEach(([id,task])=>{
+    const cb=document.getElementById('j-ao-'+id);
+    if(cb&&cb.checked)addons.push(task);
+  });
+  if(document.getElementById('j-ao-sheets')?.checked&&jBeds>0)
+    addons.push(`🛏️ Change bed sheets — ${jBeds} bed${jBeds>1?'s':''}`);
+  if(document.getElementById('j-ao-carpet')?.checked&&jCarpet2>0)
+    addons.push(`🛋️ Carpet cleaning — ${jCarpet2} room${jCarpet2>1?'s':''}`);
+  if(jWin>0) addons.push(`🪟 Interior windows — ${jWin} window${jWin>1?'s':''}`);
+  if(jLaundry2>0) addons.push(`🧺 Laundry — ${jLaundry2} load${jLaundry2>1?'s':''}`);
+  return addons;
+}
+
+function resetJobAddons(){
+  ['oven','fridge','cabinets','basement','walls','sheets','fixtures','carpet'].forEach(id=>{
+    const cb=document.getElementById('j-ao-'+id);if(cb)cb.checked=false;
+  });
+  jWin=0;jBeds=0;jCarpet2=0;jLaundry2=0;
+  ['j-win-count','j-beds-count','j-carpet-count','j-laundry-count'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.textContent='0';
+  });
+  const el=document.getElementById('j-addon-total');if(el)el.textContent='+$0';
+}
+
+// ===== CHECKLIST CLIENT WHATSAPP =====
+window.sendChecklistToClient = function(jobId){
+  const j=window.jobs[jobId];if(!j)return;
+  const mainTasks={
+    'Standard':['Kitchen — countertops, sink, stovetop','Bathrooms — toilet, sink, shower, mirror','All bedrooms — dust & vacuum','Living room — dust & vacuum','All floors swept & mopped','Trash bins emptied','Before & after photos'],
+    'Deep':['Inside oven + microwave + fridge','Inside all cabinets','Kitchen — degrease stovetop + range hood','Bathrooms — drill-scrub tiles & grout','Baseboards + window sills all rooms','Ceiling fans + light fixtures','Move furniture + clean under','Before & after photos'],
+    'Move In/Out':['Inside all cabinets + drawers','Inside oven + fridge','All walls wiped down','Inside all closets','Interior windows','Full bathroom deep scrub','All floors carpet or mopped','Before & after photos MANDATORY'],
+    'Carpet':['Pre-vacuum all areas','Hot water extraction 210°F','Pet odour treatment if needed','Fibre rinse — no residue','Odor eliminator applied','Dry in 30-45 minutes','Before & after photos'],
+    'Airbnb':['Full bathroom reset','Fresh linen + towels','Kitchen cleaned + dishes','Restock amenities','All rooms vacuumed + dusted','Condition photos sent to host'],
+  };
+  const tasks=mainTasks[j.service]||mainTasks['Standard'];
+  const addons=j.addons||[];
+
+  let msg=`Hi ${j.clientName}! 👋\n\n`;
+  msg+=`Here's your CleanSwift service confirmation:\n`;
+  msg+=`━━━━━━━━━━━━━━\n`;
+  msg+=`📋 ${j.service}\n`;
+  msg+=`📅 ${fmtDateLong(j.date)} at ${j.time||'TBD'}\n`;
+  msg+=`📍 ${j.clientAddr}\n`;
+  msg+=`💰 $${j.price}\n`;
+  msg+=`👷 ${j.empName}\n`;
+  msg+=`━━━━━━━━━━━━━━\n\n`;
+  msg+=`✅ WHAT'S INCLUDED:\n`;
+  tasks.forEach(t=>msg+=`• ${t}\n`);
+  if(addons.length>0){
+    msg+=`\n➕ ADD-ONS:\n`;
+    addons.forEach(a=>msg+=`• ${a}\n`);
+  }
+  msg+=`\n📌 Please ensure:\n`;
+  msg+=`• Access to the property\n`;
+  msg+=`• Hot water available\n`;
+  msg+=`• Pet secured if applicable\n\n`;
+  msg+=`Questions? Reply anytime 💚\n`;
+  msg+=`— CleanSwift Edmonton · +1 368 885 5157`;
+
+  sendWhatsApp(j.clientPhone,msg);
+  notify('📋 Checklist sent to client via WhatsApp!');
+};
+
+window.sendSMS = function(phone,msg){
+  const clean=phone.replace(/\D/g,'');
+  window.open('sms:+'+clean+'?body='+encodeURIComponent(msg),'_blank');
+};
+
+window.sendReminderSMS = function(jobId){
+  const j=window.jobs[jobId];if(!j)return;
+  const msg=`Hi ${j.clientName}! CleanSwift Edmonton reminder: Your ${j.service} is on ${j.date} at ${j.time||'TBD'}. Address: ${j.clientAddr}. Questions? Call +1 368 885 5157`;
+  sendSMS(j.clientPhone,msg);
+};
+
+// ===== EDIT CLIENT =====
+window.openEditClient = function(id){
+  closeModal('modal-client-detail');
+  const c=window.clients[id];if(!c)return;
+  document.getElementById('ec-id').value=id;
+  document.getElementById('ec-name').value=c.name||'';
+  document.getElementById('ec-phone').value=c.phone||'';
+  document.getElementById('ec-email').value=c.email||'';
+  document.getElementById('ec-addr').value=c.address||'';
+  document.getElementById('ec-size').value=c.size||'';
+  document.getElementById('ec-svc').value=c.service||'Standard';
+  document.getElementById('ec-freq').value=c.frequency||'onetime';
+  document.getElementById('ec-price').value=c.price||'';
+  document.getElementById('ec-notes').value=c.notes||'';
+  openModal('modal-edit-client');
+};
+
+window.saveEditClient = async function(){
+  const id=document.getElementById('ec-id').value;
+  if(!id)return;
+  const updates={
+    name:document.getElementById('ec-name').value.trim(),
+    phone:document.getElementById('ec-phone').value.trim(),
+    email:document.getElementById('ec-email').value.trim(),
+    address:document.getElementById('ec-addr').value.trim(),
+    size:document.getElementById('ec-size').value.trim(),
+    service:document.getElementById('ec-svc').value,
+    frequency:document.getElementById('ec-freq').value,
+    price:parseFloat(document.getElementById('ec-price').value)||0,
+    notes:document.getElementById('ec-notes').value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+  await update(ref(db,'clients/'+id),updates);
+  closeModal('modal-edit-client');
+  notify('✅ Client updated — '+updates.name);
+};
+
+window.deleteClientConfirm = async function(){
+  const id=document.getElementById('ec-id').value;
+  if(!confirm('Delete this client?'))return;
+  await remove(ref(db,'clients/'+id));
+  closeModal('modal-edit-client');
+  notify('🗑 Client deleted');
+};
+
+// ===== REVIEWS VERIFICATION =====
+window.openReviews = async function(){
+  const snap = await get(ref(db,'reviews'));
+  const allReviews = snap.val()||{};
+  let html='';
+  Object.entries(allReviews).forEach(([empId,data])=>{
+    const emp=window.emps[empId];
+    const pending=(data.pending||[]);
+    if(!pending.length)return;
+    html+=`<div style="margin-bottom:14px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--blue);margin-bottom:6px;">👤 ${emp?emp.name:'Unknown'}</div>
+      ${pending.map(r=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px;background:#fff8e1;border-radius:9px;margin-bottom:6px;">
+          <div><div style="font-size:0.8rem;font-weight:600;">⭐ ${r.jobName||'General'}</div><div style="font-size:0.72rem;color:#888;">${new Date(r.loggedAt).toLocaleDateString()}</div></div>
+          <button class="btn-xs" style="background:var(--green);color:#fff;" onclick="verifyReview('${empId}','${r.id}')">✓ Verify</button>
+        </div>
+      `).join('')}
+    </div>`;
+  });
+  document.getElementById('reviews-body').innerHTML=html||'<div class="empty">No pending reviews 🎉</div>';
+  openModal('modal-reviews');
+};
+
+window.verifyReview = async function(empId,reviewId){
+  const snap = await get(ref(db,'reviews/'+empId));
+  const data=snap.val()||{reviews:[],pending:[]};
+  const pendingItem=data.pending.find(r=>r.id===reviewId);
+  if(!pendingItem)return;
+  data.pending=data.pending.filter(r=>r.id!==reviewId);
+  data.reviews=[...(data.reviews||[]),{...pendingItem,verified:true,verifiedAt:new Date().toISOString()}];
+  await set(ref(db,'reviews/'+empId),data);
+  notify('✅ Review verified!');
+  openReviews();
+};
+function syncSheets(job){
+  const client=window.clients[job.clientId]||{};
+  const payload={type:'new_job',timestamp:new Date().toISOString(),client:job.clientName,phone:job.clientPhone,email:client.email||'',address:job.clientAddr,service:job.service,size:client.size||'',date:job.date,time:job.time,estimatedPrice:job.price,employee:job.empName,pay:job.pay,notes:job.notes,frequency:client.frequency||'onetime',status:job.status,jobId:job.id};
+  fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)}).catch(e=>console.log('Sync:',e));
+}
+
+// ===== INIT =====
+document.getElementById('j-date').value=today();
+document.getElementById('sync-status').textContent='⏳ Connecting...';
+startListeners();
+setTimeout(()=>{if(document.getElementById('sync-status').textContent.includes('⏳')){document.getElementById('sync-status').textContent='⚠️ Check connection';}},8000);
+</script>
+</body>
+</html>
