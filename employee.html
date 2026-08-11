@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CleanSwift — My Jobs</title>
+<style>
+:root{--blue:#0078C8;--green:#00643C;--cyan:#7DDBD8;--dark:#1A2E2A;--red:#e74c3c;--orange:#e67e22;--purple:#8e44ad;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+body{background:#F4FAFE;color:var(--dark);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--green),var(--blue));color:#fff;padding:14px 20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.logo{font-size:1.3rem;font-weight:800;}.logo span{color:var(--cyan);}
+.emp-name{font-size:0.8rem;opacity:0.85;margin-top:2px;}
+
+/* NAV */
+.nav{display:flex;background:#fff;border-bottom:2px solid #f0f0f0;position:sticky;top:60px;z-index:99;}
+.nav-btn{flex:1;padding:12px 4px;border:none;background:none;font-size:0.72rem;font-weight:600;color:#888;cursor:pointer;border-bottom:3px solid transparent;text-align:center;transition:all 0.2s;}
+.nav-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* PAGES */
+.page{display:none;padding:14px;max-width:600px;margin:0 auto;}
+.page.active{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.stat-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid var(--blue);text-align:center;}
+.stat-card.g{border-left-color:var(--green);}.stat-card.o{border-left-color:var(--orange);}.stat-card.p{border-left-color:var(--purple);}
+.stat-v{font-size:1.8rem;font-weight:800;}.stat-l{font-size:0.7rem;color:#888;margin-top:2px;}
+
+/* BONUS */
+.bonus-card{background:linear-gradient(135deg,#FFD700,#FFA500);border-radius:16px;padding:14px;margin-bottom:14px;text-align:center;box-shadow:0 4px 15px rgba(255,165,0,0.3);}
+.bonus-title{font-size:0.95rem;font-weight:800;color:#7B3F00;}
+.bonus-sub{font-size:0.76rem;color:#7B3F00;opacity:0.9;margin-top:3px;}
+.bonus-bar{background:rgba(255,255,255,0.4);border-radius:10px;height:10px;margin:8px 0;}
+.bonus-fill{background:#fff;border-radius:10px;height:10px;transition:width 0.5s;}
+.bonus-count{font-size:0.73rem;color:#7B3F00;font-weight:700;}
+
+/* JOB LIST */
+.filter-bar{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;}
+.fbtn{padding:6px 14px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;font-size:0.76rem;font-weight:600;color:#888;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.fbtn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+.job-item{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:10px;cursor:pointer;border-left:4px solid #ddd;display:flex;align-items:center;gap:12px;transition:box-shadow 0.2s;}
+.job-item:active{box-shadow:0 4px 16px rgba(0,0,0,0.12);}
+.job-item.today{border-left-color:var(--orange);}
+.job-item.upcoming{border-left-color:var(--blue);}
+.job-item.done{border-left-color:var(--green);opacity:0.8;}
+.ji-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.ji-body{flex:1;min-width:0;}
+.ji-service{font-size:0.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ji-addr{font-size:0.76rem;color:#666;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ji-meta{font-size:0.72rem;color:#888;margin-top:3px;}
+.ji-right{text-align:right;flex-shrink:0;}
+.ji-pay{font-size:1rem;font-weight:800;color:var(--green);}
+.ji-badge{font-size:0.65rem;font-weight:700;padding:3px 7px;border-radius:10px;margin-top:3px;display:inline-block;}
+.ji-pct{font-size:0.7rem;color:#888;margin-top:2px;}
+
+/* JOB DETAIL PANEL */
+.detail-panel{display:none;position:fixed;inset:0;background:#F4FAFE;z-index:150;overflow-y:auto;}
+.detail-header{background:linear-gradient(135deg,var(--green),var(--blue));color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.detail-body{padding:14px;max-width:600px;margin:0 auto;}
+
+/* INFO ROWS */
+.info-card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:12px;}
+.info-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f5f5f5;}
+.info-row:last-child{border-bottom:none;}
+.i-icon{font-size:1rem;flex-shrink:0;width:22px;margin-top:1px;}
+.i-val{flex:1;}
+.i-label{font-size:0.68rem;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;}
+.i-text{font-size:0.84rem;}
+.team-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;background:#e3f2fd;color:var(--blue);margin:2px;}
+.team-tag.me{background:#e8f5e9;color:var(--green);}
+.notes-box{background:#fff8e1;border-radius:10px;padding:10px;font-size:0.82rem;border-left:3px solid var(--orange);}
+
+/* TIME BADGE */
+.time-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;padding:8px 16px;border-radius:20px;font-size:0.88rem;font-weight:700;margin:8px 0;}
+
+/* CHECKLIST */
+.checklist-card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:12px;}
+.cl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.cl-title{font-size:0.9rem;font-weight:700;}
+.cl-pct{font-size:0.78rem;font-weight:700;padding:4px 10px;border-radius:12px;}
+.progress-bar{background:#eee;border-radius:6px;height:8px;margin-bottom:12px;}
+.progress-fill{background:var(--green);height:8px;border-radius:6px;transition:width 0.3s;}
+.task-item{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #fafafa;cursor:pointer;border-radius:6px;}
+.task-item:active{background:#f5f5f5;}
+.task-item.checked .task-text{text-decoration:line-through;color:#bbb;}
+.task-box{width:24px;height:24px;border-radius:7px;border:2px solid #ddd;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.85rem;transition:all 0.15s;}
+.task-item.checked .task-box{background:var(--green);border-color:var(--green);color:#fff;}
+.task-text{font-size:0.82rem;flex:1;line-height:1.3;}
+.btn-complete{width:100%;padding:15px;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:14px;transition:all 0.2s;}
+.btn-complete.ready{background:var(--green);color:#fff;box-shadow:0 4px 15px rgba(0,100,60,0.3);}
+.btn-complete.not-ready{background:#e0e0e0;color:#aaa;cursor:not-allowed;}
+.done-banner{background:linear-gradient(135deg,var(--green),#00843C);color:#fff;border-radius:14px;padding:16px;text-align:center;margin-bottom:12px;}
+
+/* QR / REVIEWS */
+.qr-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:12px;text-align:center;}
+.review-counter{display:flex;align-items:center;justify-content:center;gap:14px;margin:12px 0;}
+.rc-btn{width:38px;height:38px;border-radius:50%;border:2px solid var(--blue);background:#fff;color:var(--blue);font-size:1.2rem;font-weight:700;cursor:pointer;}
+.rc-val{font-size:1.5rem;font-weight:800;min-width:36px;text-align:center;}
+
+/* HISTORY */
+.hist-card{background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,0.06);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+
+/* NOTIF */
+.notif{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 20px;border-radius:10px;font-size:0.82rem;font-weight:600;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.2);animation:slideDown 0.3s ease;white-space:nowrap;}
+@keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0;}to{transform:translateX(-50%) translateY(0);opacity:1;}}
+.empty{text-align:center;padding:32px;color:#bbb;font-size:0.85rem;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Clean<span>Swift</span></div>
+  <div class="emp-name" id="emp-greeting">Loading...</div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="goTo('dashboard')">📊 Dashboard</button>
+  <button class="nav-btn" onclick="goTo('jobs')">📋 My Jobs</button>
+  <button class="nav-btn" onclick="goTo('reviews')">⭐ Reviews</button>
+  <button class="nav-btn" onclick="goTo('history')">💰 History</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="pg-dashboard">
+  <div class="stats-grid">
+    <div class="stat-card g"><div class="stat-v" id="s-done">0</div><div class="stat-l">✅ Jobs Done</div></div>
+    <div class="stat-card o"><div class="stat-v" id="s-earned">$0</div><div class="stat-l">💰 Earned</div></div>
+    <div class="stat-card p"><div class="stat-v" id="s-reviews">0</div><div class="stat-l">⭐ Reviews</div></div>
+    <div class="stat-card"><div class="stat-v" id="s-upcoming">0</div><div class="stat-l">📋 Upcoming</div></div>
+  </div>
+  <div id="bonus-dash"></div>
+  <div class="info-card">
+    <div style="font-size:0.88rem;font-weight:700;margin-bottom:10px;">🔔 Today's Jobs</div>
+    <div id="d-today"><div class="empty" style="padding:16px;">No jobs today 🎉</div></div>
+  </div>
+  <div class="info-card">
+    <div style="font-size:0.88rem;font-weight:700;margin-bottom:10px;">📅 Upcoming</div>
+    <div id="d-upcoming"><div class="empty" style="padding:16px;">No upcoming jobs</div></div>
+  </div>
+</div>
+
+<!-- MY JOBS -->
+<div class="page" id="pg-jobs">
+  <div class="filter-bar">
+    <button class="fbtn active" onclick="filterJobs('all',this)">All</button>
+    <button class="fbtn" onclick="filterJobs('today',this)">🔔 Today</button>
+    <button class="fbtn" onclick="filterJobs('upcoming',this)">📅 Upcoming</button>
+    <button class="fbtn" onclick="filterJobs('done',this)">✅ Done</button>
+  </div>
+  <div id="jobs-list"><div class="empty">No jobs yet</div></div>
+</div>
+
+<!-- REVIEWS -->
+<div class="page" id="pg-reviews">
+  <div class="qr-card">
+    <div style="font-size:0.95rem;font-weight:700;margin-bottom:6px;">⭐ Ask Clients for a Google Review!</div>
+    <div style="font-size:0.76rem;color:#888;margin-bottom:12px;">Show this QR Code at the end of each job</div>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=00643C&data=https%3A%2F%2Fg.page%2Fr%2FCYme-2qu1O2QEBM%2Freview" width="150" height="150" style="border-radius:12px;margin:0 auto 10px;display:block;">
+    <div style="font-size:0.76rem;color:#888;margin-top:6px;">🎁 Reach 20 reviews → earn $5 bonus!</div>
+  </div>
+  <div id="bonus-reviews"></div>
+  <div class="info-card">
+    <div style="font-size:0.88rem;font-weight:700;margin-bottom:6px;">📝 Log a Review</div>
+    <div style="font-size:0.76rem;color:#888;margin-bottom:10px;">Only log if client actually left a review. Admin will verify before counting.</div>
+    <div class="review-counter">
+      <button class="rc-btn" onclick="changeReviewCount(-1)">−</button>
+      <span class="rc-val" id="rev-count">1</span>
+      <button class="rc-btn" onclick="changeReviewCount(1)">+</button>
+    </div>
+    <select id="rev-job" style="width:100%;padding:9px;border:2px solid #e0e0e0;border-radius:9px;font-size:0.85rem;margin-bottom:10px;"></select>
+    <button onclick="logReview()" style="width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;">⭐ Submit for Verification</button>
+  </div>
+  <div class="info-card">
+    <div style="font-size:0.88rem;font-weight:700;margin-bottom:10px;">📋 Review History</div>
+    <div id="rev-history"><div class="empty">No reviews yet</div></div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="pg-history">
+  <div style="background:linear-gradient(135deg,var(--green),var(--blue));border-radius:16px;padding:16px;color:#fff;text-align:center;margin-bottom:14px;">
+    <div style="font-size:0.8rem;opacity:0.85;">Total Earned</div>
+    <div style="font-size:2.5rem;font-weight:800;" id="h-total">$0</div>
+    <div style="font-size:0.75rem;opacity:0.8;" id="h-count">0 jobs</div>
+  </div>
+  <div id="hist-list"><div class="empty">No completed jobs yet</div></div>
+</div>
+
+<!-- JOB DETAIL PANEL — Plein écran -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <button class="back-btn" onclick="closeDetail()">←</button>
+    <div style="flex:1;min-width:0;">
+      <div id="dp-service" style="font-size:1rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      <div id="dp-datetime" style="font-size:0.76rem;opacity:0.85;margin-top:2px;"></div>
+    </div>
+    <div id="dp-status" style="flex-shrink:0;"></div>
+  </div>
+  <div class="detail-body" id="dp-body"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, onValue, update, set } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+const firebaseConfig={apiKey:"AIzaSyDHEh1d7ONcYGbC0xSFFKfOOig5xQzFbwE",authDomain:"cleanswift-crm.firebaseapp.com",databaseURL:"https://cleanswift-crm-default-rtdb.firebaseio.com",projectId:"cleanswift-crm",storageBucket:"cleanswift-crm.firebasestorage.app",messagingSenderId:"585894532435",appId:"1:585894532435:web:a77b0e665abb765c55bda6"};
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+
+const BONUS_AT=20;const BONUS=$5;
+function getParam(n){return new URLSearchParams(location.search).get(n);}
+function fmtDate(d){if(!d)return'';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});}
+function fmtDateLong(d){if(!d)return'';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});}
+function today(){return new Date().toISOString().split('T')[0];}
+function notify(msg,color){const n=document.createElement('div');n.className='notif';n.style.background=color||'var(--green)';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),3000);}
+
+const empId=getParam('id');
+if(!empId){document.body.innerHTML='<div style="text-align:center;padding:60px 20px;color:#888;"><div style="font-size:3rem;">🔐</div><p style="margin-top:10px;">Invalid link.<br>Ask your manager for your personal link.</p></div>';throw new Error('No empId');}
+
+let empData={};let allJobs={};let revData={reviews:[],pending:[]};let revCount=1;let currentJobId=null;let jobFilter='all';
+
+// ===== FIREBASE LISTENERS =====
+onValue(ref(db,'employees/'+empId),snap=>{
+  empData=snap.val()||{};
+  document.getElementById('emp-greeting').textContent='Hi '+(empData.name||'Cleaner')+' 👋';
+});
+
+onValue(ref(db,'jobs'),snap=>{
+  allJobs=snap.val()||{};
+  renderAll();
+  // Si panel ouvert, rafraîchir
+  if(currentJobId&&document.getElementById('detail-panel').style.display==='block'){
+    renderDetail(currentJobId);
+  }
+});
+
+onValue(ref(db,'reviews/'+empId),snap=>{
+  revData=snap.val()||{reviews:[],pending:[]};
+  renderAll();
+  if(document.getElementById('pg-reviews').classList.contains('active')) renderReviews();
+});
+
+// ===== UTILS =====
+function getMyJobs(){
+  return Object.values(allJobs).filter(j=>{
+    if(!j) return false;
+    // Nouveau système — tableau cleaners
+    if(j.cleaners&&j.cleaners.length>0){
+      return j.cleaners.some(c=>c&&c.id===empId);
+    }
+    // Ancien système — empId simple
+    return j.empId===empId;
+  });
+}
+const HOURLY_RATE = 19;
+
+function durationToHours(dur){
+  if(!dur) return 2;
+  const map={'1h':1,'1h30':1.5,'2h':2,'2h30':2.5,'3h':3,'3h30':3.5,'4h':4,'4h30':4.5,'5h':5,'6h':6,'7h':7,'8h':8};
+  return map[dur]||parseFloat(dur)||2;
+}
+
+function getMyPay(j){
+  // Nouveau système — durée × taux horaire
+  if(j.duration) return Math.round(durationToHours(j.duration)*HOURLY_RATE);
+  // Ancien système — salaire défini manuellement
+  if(j.cleaners&&j.cleaners.length>0){
+    const me=j.cleaners.find(c=>c.id===empId);
+    if(me&&me.pay>0) return me.pay;
+  }
+  if(j.pay&&j.pay>0) return j.pay;
+  // Fallback si rien
+  return 0;
+}
+
+// ===== NAVIGATION =====
+window.goTo=function(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+name).classList.add('active');
+  const idx={dashboard:0,jobs:1,reviews:2,history:3}[name];
+  document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+  if(name==='reviews')renderReviews();
+  if(name==='history')renderHistory();
+};
+
+// ===== RENDER ALL =====
+function renderAll(){
+  const t=today();
+  const myJobs=getMyJobs();
+  const done=myJobs.filter(j=>j.status==='done'||j.status==='paid');
+  const upcoming=myJobs.filter(j=>j.date>=t&&j.status!=='done'&&j.status!=='paid');
+  const totalEarned=done.reduce((s,j)=>s+getMyPay(j),0);
+  const reviews=(revData.reviews||[]).length;
+
+  // Stats
+  document.getElementById('s-done').textContent=done.length;
+  document.getElementById('s-earned').textContent='$'+totalEarned;
+  document.getElementById('s-reviews').textContent=reviews;
+  document.getElementById('s-upcoming').textContent=upcoming.length;
+
+  // Bonus
+  renderBonus('bonus-dash',reviews);
+
+  // Today
+  const todayJobs=myJobs.filter(j=>j.date===t&&j.status!=='done'&&j.status!=='paid');
+  const tel=document.getElementById('d-today');
+  tel.innerHTML=todayJobs.length?todayJobs.map(j=>`
+    <div onclick="openDetail('${j.id}')" style="padding:10px;border-left:3px solid var(--orange);background:#fff8f0;border-radius:0 8px 8px 0;margin-bottom:8px;cursor:pointer;">
+      <div style="font-weight:700;font-size:0.88rem;">${j.service}</div>
+      <div style="font-size:0.76rem;color:#666;margin-top:2px;">⏰ <b>${j.time||'TBD'}</b>${j.duration?' · ⏱️ '+j.duration:''} · 📍 ${j.clientAddr||'See details'}</div>
+      <div style="font-size:0.72rem;color:#888;margin-top:2px;">📋 ${(j.checklistDone||[]).length}/${(j.checklist||[]).length} tasks</div>
+    </div>
+  `).join(''):'<div class="empty" style="padding:16px;">No jobs today 🎉</div>';
+
+  // Upcoming
+  const upNext=upcoming.filter(j=>j.date>t).slice(0,5);
+  const uel=document.getElementById('d-upcoming');
+  uel.innerHTML=upNext.length?upNext.map(j=>`
+    <div onclick="openDetail('${j.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+      <div>
+        <div style="font-size:0.83rem;font-weight:700;">${j.service}</div>
+        <div style="font-size:0.73rem;color:#888;">${fmtDate(j.date)} · ⏰ ${j.time||'TBD'}</div>
+      </div>
+      <span style="font-size:0.68rem;font-weight:700;padding:3px 8px;border-radius:10px;background:#e3f2fd;color:var(--blue);">View →</span>
+    </div>
+  `).join(''):'<div class="empty" style="padding:16px;">No upcoming jobs</div>';
+
+  // Jobs list
+  renderJobsList(jobFilter);
+
+  // Review job select
+  const sel=document.getElementById('rev-job');
+  if(sel) sel.innerHTML='<option value="">-- Select job --</option>'+done.map(j=>`<option value="${j.id}">${j.service} — ${fmtDate(j.date)}</option>`).join('');
+}
+
+// ===== JOBS LIST =====
+function renderJobsList(filter){
+  const t=today();
+  const myJobs=getMyJobs();
+  let list;
+  if(filter==='today') list=myJobs.filter(j=>j.date===t);
+  else if(filter==='upcoming') list=myJobs.filter(j=>j.date>t&&j.status!=='done'&&j.status!=='paid');
+  else if(filter==='done') list=myJobs.filter(j=>j.status==='done'||j.status==='paid');
+  else list=myJobs.filter(j=>j.status!=='paid');
+  list.sort((a,b)=>a.date.localeCompare(b.date));
+
+  const el=document.getElementById('jobs-list');
+  if(!list.length){el.innerHTML='<div class="empty">No jobs found</div>';return;}
+
+  el.innerHTML=list.map(j=>{
+    const done=j.checklistDone||[];
+    const tot=j.checklist?j.checklist.length:0;
+    const pct=tot?Math.round(done.length/tot*100):0;
+    const isDone=j.status==='done'||j.status==='paid';
+    const isToday=j.date===t;
+    const cls=isDone?'done':isToday?'today':'upcoming';
+    const icon=isDone?'✅':isToday?'🔔':'📋';
+    const iconBg=isDone?'#e8f5e9':isToday?'#fff3e0':'#e3f2fd';
+    const statusText=isDone?'Done':isToday?'TODAY':'Upcoming';
+    const statusColor=isDone?'var(--green)':isToday?'var(--orange)':'var(--blue)';
+    const statusBg=isDone?'#e8f5e9':isToday?'#fff3e0':'#e3f2fd';
+    return `
+    <div class="job-item ${cls}" onclick="openDetail('${j.id}')">
+      <div class="ji-icon" style="background:${iconBg};">${icon}</div>
+      <div class="ji-body">
+        <div class="ji-service">${j.service}</div>
+        <div class="ji-addr">📍 ${j.clientAddr||'Address on detail'}</div>
+        <div class="ji-meta">📅 ${fmtDate(j.date)} · ⏰ <b>${j.time||'TBD'}</b>${j.duration?' · ⏱️ '+j.duration:''}${tot?` · 📋 ${done.length}/${tot}`:''}</div>
+      </div>
+      <div class="ji-right">
+        <div class="ji-pay">$${getMyPay(j)}</div>
+        <div class="ji-badge" style="background:${statusBg};color:${statusColor};">${statusText}</div>
+        ${tot&&!isDone?`<div class="ji-pct">${pct}%</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.filterJobs=function(f,btn){
+  jobFilter=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderJobsList(f);
+};
+
+// ===== JOB DETAIL =====
+window.openDetail=function(jobId){
+  currentJobId=jobId;
+  renderDetail(jobId);
+  document.getElementById('detail-panel').style.display='block';
+  document.documentElement.scrollTop=0;
+  document.body.style.overflow='hidden';
+};
+
+window.closeDetail=function(){
+  document.getElementById('detail-panel').style.display='none';
+  document.body.style.overflow='';
+  currentJobId=null;
+};
+
+function renderDetail(jobId){
+  const j=allJobs[jobId];if(!j)return;
+  const done=j.checklistDone||[];
+  const tot=j.checklist?j.checklist.length:0;
+  const pct=tot?Math.round(done.length/tot*100):0;
+  const allDone=tot>0&&done.length>=tot;
+  const isDone=j.status==='done'||j.status==='paid';
+  const myPay=getMyPay(j);
+  const teammates=j.cleaners&&j.cleaners.length>1?j.cleaners.filter(c=>c.id!==empId):[];
+
+  // Header
+  document.getElementById('dp-service').textContent=j.service+(j.size?' — '+j.size:'');
+  document.getElementById('dp-datetime').textContent='📅 '+fmtDate(j.date)+(j.time?' · ⏰ '+j.time:'');
+  document.getElementById('dp-status').innerHTML=isDone
+    ?'<span style="background:#e8f5e9;color:var(--green);font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:12px;">✅ Done</span>'
+    :'<span style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:12px;">Active</span>';
+
+  document.getElementById('dp-body').innerHTML=`
+
+    ${isDone?`<div class="done-banner"><div style="font-size:1.1rem;font-weight:800;">🎉 Job Completed!</div><div style="font-size:0.8rem;opacity:0.9;margin-top:4px;">Great work! Ask client for a Google Review ⭐</div></div>`:''}
+
+    <!-- TIME HIGHLIGHT -->
+    <div style="text-align:center;margin-bottom:12px;">
+      <div class="time-badge">⏰ Start at ${j.time||'TBD'} · ${fmtDateLong(j.date)}</div>
+      ${j.duration?`<div style="display:inline-block;margin-left:8px;background:#e8f5e9;color:var(--green);padding:8px 16px;border-radius:20px;font-size:0.88rem;font-weight:700;">⏱️ Duration: ${j.duration}</div>`:''}
+    </div>
+
+    <!-- JOB INFO — sans numéro ni email -->
+    <div class="info-card">
+      <div class="info-row">
+        <div class="i-icon">🧹</div>
+        <div class="i-val"><div class="i-label">Service</div><div class="i-text">${j.service}${j.size?' — '+j.size:''}</div></div>
+      </div>
+      <div class="info-row">
+        <div class="i-icon">📍</div>
+        <div class="i-val"><div class="i-label">Address</div><div class="i-text" style="font-weight:600;">${j.clientAddr||'See manager'}</div></div>
+      </div>
+      <div class="info-row">
+        <div class="i-icon">💰</div>
+        <div class="i-val">
+          <div class="i-label">Your Pay</div>
+          <div class="i-text" style="font-size:1.3rem;font-weight:800;color:var(--green);">$${myPay}</div>
+          <div style="font-size:0.72rem;color:#888;margin-top:2px;">$${HOURLY_RATE}/hr × ${j.duration||'2h'} = $${myPay}</div>
+        </div>
+      </div>
+      ${teammates.length?`<div class="info-row">
+        <div class="i-icon">👥</div>
+        <div class="i-val"><div class="i-label">Team on this job</div><div class="i-text">${teammates.map(c=>`<span class="team-tag">${c.name}</span>`).join('')}</div></div>
+      </div>`:''}
+    </div>
+
+    ${j.notes?`<div class="notes-box" style="margin-bottom:12px;">📝 <b>Manager Notes:</b><br>${j.notes}</div>`:''}
+
+    ${!isDone?`
+    <!-- CHECKLIST -->
+    <div class="checklist-card">
+      <div class="cl-header">
+        <div class="cl-title">✅ Checklist</div>
+        <span class="cl-pct" style="background:${pct===100?'#e8f5e9':'#fff3e0'};color:${pct===100?'var(--green)':'var(--orange)'};">${done.length}/${tot} · ${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div>
+        ${(j.checklist||[]).map(task=>{
+          const checked=done.includes(task);
+          const safeTask=task.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+          return `<div class="task-item ${checked?'checked':''}" onclick="toggleTask('${jobId}','${safeTask}')">
+            <div class="task-box">${checked?'✓':''}</div>
+            <div class="task-text">${task}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="btn-complete ${allDone?'ready':'not-ready'}" onclick="completeJob('${jobId}')" ${allDone?'':'disabled'}>
+        ${allDone?'🎉 Mark as Complete!':'⬜ '+done.length+'/'+tot+' tasks done — complete all to finish'}
+      </button>
+    </div>`:`
+    <!-- QR REVIEWS après completion -->
+    <div class="qr-card">
+      <div style="font-weight:700;margin-bottom:6px;">⭐ Ask for a Google Review!</div>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=00643C&data=https%3A%2F%2Fg.page%2Fr%2FCYme-2qu1O2QEBM%2Freview" width="120" height="120" style="border-radius:10px;display:block;margin:0 auto 8px;">
+      <div style="font-size:0.76rem;color:#888;">Show this QR code to the client</div>
+    </div>`}
+  `;
+}
+
+window.toggleTask=async function(jobId,task){
+  const j=allJobs[jobId];if(!j||j.status==='done'||j.status==='paid')return;
+  const done=[...(j.checklistDone||[])];
+  const idx=done.indexOf(task);
+  if(idx>-1)done.splice(idx,1);else done.push(task);
+  await update(ref(db,'jobs/'+jobId),{checklistDone:done});
+};
+
+window.completeJob=async function(jobId){
+  const j=allJobs[jobId];if(!j)return;
+  if((j.checklistDone||[]).length<(j.checklist||[]).length){notify('Complete all tasks first!','var(--red)');return;}
+  await update(ref(db,'jobs/'+jobId),{status:'done',completedAt:new Date().toISOString()});
+  notify('🎉 Job complete! Manager notified!');
+};
+
+// ===== BONUS =====
+function renderBonus(elId,reviews){
+  const el=document.getElementById(elId);if(!el)return;
+  const pct=Math.min(100,Math.round(reviews/BONUS_AT*100));
+  const remaining=Math.max(0,BONUS_AT-reviews);
+  el.innerHTML=reviews>=BONUS_AT
+    ?`<div class="bonus-card"><div class="bonus-title">🎉 BONUS UNLOCKED! +$${BONUS}</div><div class="bonus-sub">You reached ${BONUS_AT} reviews! Claim your bonus from your manager.</div></div>`
+    :`<div class="bonus-card">
+        <div class="bonus-title">🎁 $${BONUS} Bonus at ${BONUS_AT} reviews!</div>
+        <div class="bonus-sub">${remaining} more review${remaining>1?'s':''} to unlock your bonus</div>
+        <div class="bonus-bar"><div class="bonus-fill" style="width:${pct}%"></div></div>
+        <div class="bonus-count">${reviews} / ${BONUS_AT} · ${pct}% complete</div>
+      </div>`;
+}
+
+// ===== REVIEWS =====
+window.changeReviewCount=function(n){revCount=Math.max(1,Math.min(5,revCount+n));document.getElementById('rev-count').textContent=revCount;};
+
+window.logReview=async function(){
+  const jobId=document.getElementById('rev-job').value;
+  const j=jobId?allJobs[jobId]:null;
+  const pending=[...(revData.pending||[])];
+  for(let i=0;i<revCount;i++){
+    pending.push({id:Date.now().toString(36)+i,jobId,jobName:j?j.service+' — '+fmtDate(j.date):'General',loggedAt:new Date().toISOString(),verified:false});
+  }
+  await set(ref(db,'reviews/'+empId),{...revData,pending});
+  notify('⭐ '+revCount+' review(s) submitted for verification!');
+  document.getElementById('rev-count').textContent='1';revCount=1;
+};
+
+function renderReviews(){
+  renderBonus('bonus-reviews',(revData.reviews||[]).length);
+  const all=[...(revData.reviews||[]),...(revData.pending||[])].sort((a,b)=>b.loggedAt.localeCompare(a.loggedAt));
+  document.getElementById('rev-history').innerHTML=all.length?all.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px;background:${r.verified?'#e8f5e9':'#fff8e1'};border-radius:9px;margin-bottom:6px;">
+      <div><div style="font-size:0.82rem;font-weight:600;">⭐ ${r.jobName||'General'}</div><div style="font-size:0.72rem;color:#888;">${new Date(r.loggedAt).toLocaleDateString()}</div></div>
+      <span style="font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;background:${r.verified?'var(--green)':'var(--orange)'};color:#fff;">${r.verified?'✓ Verified':'Pending'}</span>
+    </div>
+  `).join(''):'<div class="empty">No reviews logged yet</div>';
+}
+
+// ===== HISTORY =====
+function renderHistory(){
+  const done=getMyJobs().filter(j=>j.status==='done'||j.status==='paid').sort((a,b)=>b.date.localeCompare(a.date));
+  const total=done.reduce((s,j)=>s+getMyPay(j),0);
+  document.getElementById('h-total').textContent='$'+total;
+  document.getElementById('h-count').textContent=done.length+' jobs completed';
+  document.getElementById('hist-list').innerHTML=done.length?done.map(j=>`
+    <div class="hist-card" onclick="openDetail('${j.id}')">
+      <div><div style="font-weight:700;font-size:0.85rem;">${j.service}</div><div style="font-size:0.74rem;color:#888;">📅 ${fmtDate(j.date)}</div></div>
+      <div style="font-size:1.1rem;font-weight:800;color:var(--green);">$${getMyPay(j)}</div>
+    </div>
+  `).join(''):'<div class="empty">No completed jobs yet</div>';
+}
+</script>
+</body>
+</html>
