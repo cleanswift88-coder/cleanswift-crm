@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CleanSwift — Inscription</title>
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="images/favicon-64.png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0078C8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CleanSwift">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+/* ===== MOBILE FIT (pas de zoom, tout centré) ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+html,body{max-width:100%;overflow-x:hidden;}
+body{touch-action:manipulation;}
+img{max-width:100%;}
+input,select,textarea{max-width:100%;min-width:0;}
+@media (pointer:coarse){input,select,textarea{font-size:16px !important;}}
+
+body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#f0f6fb;color:#1a2a3a;padding:20px;min-height:100vh}
+.box{max-width:460px;margin:0 auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+h1{font-size:1.4rem;color:#0078C8;margin-bottom:4px} h1 span{color:#00643C}
+p.sub{color:#667;font-size:.85rem;margin-bottom:16px}
+label{display:block;font-size:.78rem;font-weight:700;margin:12px 0 4px}
+input,textarea{width:100%;padding:12px;border:2px solid #e0e6ec;border-radius:10px;font-size:1rem;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#0078C8}
+button{width:100%;margin-top:18px;padding:14px;border:none;border-radius:12px;background:#00643C;color:#fff;font-size:1rem;font-weight:800;cursor:pointer}
+button:disabled{opacity:.5}
+.lang{float:right;background:none;color:#0078C8;width:auto;margin:0;padding:4px 8px;font-size:.8rem;border:1px solid #0078C8;border-radius:8px}
+.msg{text-align:center;padding:30px 10px;font-size:1rem}
+.msg .big{font-size:2.4rem;margin-bottom:10px}
+.err{color:#c62828;font-size:.85rem;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+<div class="box" id="box"><div class="msg">...</div></div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyD6MtDfQ3455TNfYrkppAnW_GMDukNwI9c",
+  authDomain:"cleanswift-crm-v2.firebaseapp.com",
+  databaseURL:"https://cleanswift-crm-v2-default-rtdb.firebaseio.com",
+  projectId:"cleanswift-crm-v2",
+  messagingSenderId:"930460282224",
+  appId:"1:930460282224:web:bf3da35eff3695ae6733b5"
+});
+const db=firebase.database();
+const token=new URLSearchParams(location.search).get('invite');
+let lang='fr';
+const T={
+ fr:{title:'Bienvenue chez',sub:"Remplis ton profil. Le gestionnaire va le vérifier, puis tu recevras ton lien d'application.",name:'Nom complet *',phone:'Téléphone (WhatsApp) *',email:'Courriel pour les paiements Interac *',addr:'Adresse (rue, ville) *',emName:"Contact d'urgence — nom *",emPhone:"Contact d'urgence — téléphone *",send:'Envoyer ma demande',need:'Remplis tous les champs obligatoires.',badEmail:'Courriel invalide.',
+  bad:"Ce lien d'invitation est invalide.",expired:"Ce lien a expiré. Demande un nouveau lien au gestionnaire.",used:"Ce lien a déjà été utilisé.",done:'Merci! Ta demande est envoyée.',done2:"Tu recevras ton lien d'application par WhatsApp après approbation.",wait:"Ta demande est en attente d'approbation.",approved:"Ta demande est approuvée! Vérifie ton WhatsApp pour ton lien d'application."},
+ en:{title:'Welcome to',sub:'Fill in your profile. The manager will review it, then you will get your app link.',name:'Full name *',phone:'Phone (WhatsApp) *',email:'Email for Interac payments *',addr:'Address (street, city) *',emName:'Emergency contact — name *',emPhone:'Emergency contact — phone *',send:'Send my request',need:'Please fill in all required fields.',badEmail:'Invalid email.',
+  bad:'This invitation link is invalid.',expired:'This link has expired. Ask the manager for a new one.',used:'This link was already used.',done:'Thank you! Your request was sent.',done2:'You will get your app link on WhatsApp after approval.',wait:'Your request is waiting for approval.',approved:'Your request is approved! Check WhatsApp for your app link.'}
+};
+let inv=null;
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbzWdyU5WQq8oY1UA1wmw0TF4gUpvjRwPQ9Smm8EsoOUpOjff7EGPXwC8BK4OPFMqmaH/exec';
+function notifyAdmins(title,body){
+  Promise.all(['owner','admin'].map(function(g){return db.ref('push_tokens/'+g).once('value');})).then(function(snaps){
+    var out=[];snaps.forEach(function(sn){var v=sn.val()||{};Object.keys(v).forEach(function(id){Object.values(v[id]||{}).forEach(function(t){if(typeof t==='string'&&out.indexOf(t)<0)out.push(t);});});});
+    if(!out.length)return;
+    fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'push',tokens:out,title:title,body:body,url:'./'})}).catch(function(){});
+  }).catch(function(){});
+}
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function head(){return `<button class="lang" onclick="lang=lang==='fr'?'en':'fr';render()">${lang==='fr'?'English':'Français'}</button><img src="images/logo.png" alt="CleanSwift" style="height:40px;width:auto;display:block;margin:0 0 8px;"><h1 style="font-size:1.1rem;color:#1a2a3a;">${T[lang].title} CleanSwift</h1>`;}
+function show(icon,key){document.getElementById('box').innerHTML=head()+`<div class="msg"><div class="big">${icon}</div>${T[lang][key]}${key==='done'?'<br><br>'+T[lang].done2:''}</div>`;}
+function render(){
+  const t=T[lang],box=document.getElementById('box');
+  if(!token||!inv) return show('⚠️','bad');
+  if(inv.status==='approved') return show('✅','approved');
+  if(inv.status==='submitted') return show('⏳','wait');
+  if(inv.status!=='pending') return show('⚠️','used');
+  if(Date.now()>inv.expiresAt) return show('⌛','expired');
+  box.innerHTML=head()+`<p class="sub">${t.sub}</p>
+  <label>${t.name}</label><input id="f-name" autocomplete="name">
+  <label>${t.phone}</label><input id="f-phone" type="tel" value="${esc(inv.phone)}">
+  <label>${t.email}</label><input id="f-email" type="email" autocomplete="email">
+  <label>${t.addr}</label><input id="f-addr" autocomplete="street-address">
+  <label>${t.emName}</label><input id="f-emn">
+  <label>${t.emPhone}</label><input id="f-emp" type="tel">
+  <div class="err" id="err"></div>
+  <button id="go" onclick="submitForm()">${t.send}</button>`;
+}
+async function submitForm(){
+  const g=id=>document.getElementById(id).value.trim();
+  const p={name:g('f-name'),phone:g('f-phone'),email:g('f-email').toLowerCase(),address:g('f-addr'),emergencyName:g('f-emn'),emergencyPhone:g('f-emp')};
+  const err=document.getElementById('err');err.style.display='block';
+  if(Object.values(p).some(v=>!v)){err.textContent=T[lang].need;return;}
+  if(!/^\S+@\S+\.\S+$/.test(p.email)){err.textContent=T[lang].badEmail;return;}
+  document.getElementById('go').disabled=true;
+  const cur=(await db.ref('invites/'+token).once('value')).val();
+  if(!cur||cur.status!=='pending'||Date.now()>cur.expiresAt){inv=cur;return render();}
+  await db.ref('invites/'+token).update({status:'submitted',profile:p,submittedAt:new Date().toISOString()});
+  notifyAdmins('🕓 Nouvel employé',p.name+' attend ton approbation');
+  show('🎉','done');
+}
+(async()=>{
+  if(token){ try{ inv=(await db.ref('invites/'+token).once('value')).val(); }catch(e){} }
+  render();
+})();
+</script>
+</body>
+</html>
